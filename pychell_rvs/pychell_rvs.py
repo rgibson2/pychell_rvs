@@ -156,13 +156,13 @@ def pychell_rvs_main(user_input_options, user_model_blueprints):
         # Iterate over remaining stellar template generations
         for iter_num in range(gpars['n_template_fits']):
 
-            print('  Starting Iteration: ' + str(iter_num+1) + ' of ' + str(gpars['n_template_fits']), flush=True)
+            print('Starting Iteration: ' + str(iter_num+1) + ' of ' + str(gpars['n_template_fits']), flush=True)
 
             ti_iter = time.time()
 
             fit_spectra(forward_models, iter_num+gpars['ndi'], templates_dict, gpars)
             tf_iter = time.time()
-            print('  Finished Iteration ' + str(iter_num+1) + ' in ' + str(round(tf_iter-ti_iter, 2)/3600) + ' hours', flush=True)
+            print('Finished Iteration ' + str(iter_num+1) + ' in ' + str(round(tf_iter-ti_iter, 2)/3600) + ' hours', flush=True)
 
             # Generate RVs
             # Extract doppler shifts from the Parameters Objects and compute nightly RVs
@@ -938,6 +938,7 @@ def init_pipeline(user_input_options, user_model_blueprints):
 
     # For now load in bary corr file before this code is run.
     # This is a workaround because astropy does not play well with the ARGO cluster
+    global_pars['bary_corrs'] = None
     if global_pars['bary_corr_file'] is not None:
         global_pars['BJDS'], global_pars['bary_corrs'] = np.loadtxt(global_pars['data_input_path'] + global_pars['bary_corr_file'], delimiter=',', unpack=True)
 
@@ -949,20 +950,25 @@ def init_pipeline(user_input_options, user_model_blueprints):
     for ispec in range(global_pars['n_spec']):
         print('Loading In Observation ' + str(ispec+1) + ' to determine order independent obs details ...', flush=True)
         data_all_first_order.append(data_class_init(global_pars['data_filenames'][ispec], global_pars['do_orders'][0], ispec, global_pars))
-
-    if global_pars['bary_corr_file'] is None:
-        global_pars['bary_corrs'] = np.empty(global_pars['n_spec'], dtype=np.float64)
-        for i in range(global_pars['n_spec']):
-            global_pars['bary_corrs'][i] = data_all_first_order[i].bary_corr
+        
+    # Sort by BJD, reset the BJDS and bary_corrs from the sorted data objects.
+    # We also sort the data_filenames objects so that when read in later, they are in the correct order.
+    global_pars['sorting_inds'] = pcutils.sort_data(data_all_first_order, global_pars)
+    data_all_first_order = [data_all_first_order[global_pars['sorting_inds'][ispec]] for ispec in range(global_pars['n_spec'])]
+    [setattr(data_all_first_order[ispec], 'spec_num', ispec) for ispec in range(global_pars['n_spec'])]
+    
+    # get the BJDS and barycorrs from the now sorted data.
+    global_pars['BJDS'] = np.array([getattr(data_all_first_order[ispec], 'BJD') for ispec in range(global_pars['n_spec'])]).astype(np.float64)
+    global_pars['bary_corrs'] = np.array([getattr(data_all_first_order[ispec], 'bary_corr') for ispec in range(global_pars['n_spec'])]).astype(np.float64)
+    global_pars['data_filenames'] = global_pars['data_filenames'][global_pars['sorting_inds']]
 
     # Calculate some more parameters from the observations
-    global_pars['JDS'] = pcdata.SpecData.get_obs_details(data_all_first_order, 'JD', global_pars)
-    global_pars['BJDS'] = pcdata.SpecData.get_obs_details(data_all_first_order, 'BJD', global_pars)
     global_pars['BJDS_nightly'], global_pars['n_obs_nights'] = pcutils.get_nightly_jds(global_pars['BJDS'], global_pars)
-    global_pars['n_nights'] = global_pars['n_obs_nights'].size
+    global_pars['n_nights'] = len(global_pars['n_obs_nights'])
+    
+    print(global_pars['BJDS'])
 
     # Save the global parameters dictionary to the output directory
-    np.savetxt('bary_corrs_toi1411.txt', np.array([global_pars['BJDS'], global_pars['bary_corrs']]).T, delimiter=',')
     np.savez(global_pars['run_output_path'] + 'global_parameters_dictionary.npz', global_pars)
     
     # Matplotlib backend

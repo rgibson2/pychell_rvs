@@ -4,6 +4,12 @@ import numpy as np
 import pychell_rvs.pychell_math as pcmath
 from pdb import set_trace as stop
 
+def sort_data(data_list, gpars):
+    bjds_temp = np.array([getattr(data_list[ispec], 'BJD') for ispec in range(gpars['n_spec'])]).astype(np.float64)
+    sorting_inds = np.argsort(bjds_temp)
+    return sorting_inds
+    
+
 def find_all_items(obj, key, keys=None):
     ret = []
     if not keys:

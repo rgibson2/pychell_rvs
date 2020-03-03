@@ -34,13 +34,6 @@ class SpecData(ABC):
     @abstractmethod
     def parse(self, order_num, spec_num, gpars):
         pass
-    
-    def get_obs_details(data_list, key, gpars):
-        dtype = type(getattr(data_list[0], key))
-        out = np.empty(gpars['n_spec'], dtype=dtype)
-        for ispec in range(gpars['n_spec']):
-            out[ispec] = getattr(data_list[ispec], key)
-        return out
 
 class SpecDataCHIRON(SpecData):
     
@@ -74,7 +67,7 @@ class SpecDataCHIRON(SpecData):
         self.JD = Time(self.obs_details['DATE'].replace('T', ' '), scale='utc').jd + float(self.obs_details['EXPTIME']) / (2 * 3600 * 24)
         
         # Calculate barycenter velocities
-        if gpars['bary_corr_file'] is None:
+        if gpars['bary_corr_file'] is None and gpars['bary_corrs'] is None:
             self.bary_corr = get_BC_vel(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
             self.BJD = JDUTC_to_BJDTDB(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
         else:
@@ -114,7 +107,7 @@ class SpecDataiSHELL(SpecData):
         self.JD = float(self.obs_details['TCS_UTC']) + 2400000.5 + float(self.obs_details['ITIME']) / (2 * 3600 * 24)
         
         # Calculate barycenter velocities
-        if gpars['bary_corr_file'] is None:
+        if gpars['bary_corr_file'] is None and gpars['bary_corrs'] is None:
             self.bary_corr = get_BC_vel(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
             self.BJD = JDUTC_to_BJDTDB(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
         else:
@@ -152,7 +145,7 @@ class SpecDataPARVI(SpecData):
         # Convert wavelength grid to Angstroms
         self.wave_grid *= 10
         
-        if gpars['bary_corr_file'] is None:
+        if gpars['bary_corr_file'] is None and gpars['bary_corrs'] is None:
             self.bary_corr = get_BC_vel(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
             self.BJD = JDUTC_to_BJDTDB(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
         else:
