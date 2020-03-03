@@ -21,7 +21,8 @@ default_config = {
     # Model Resolution (n_model_pixels = model_resolution * n_data_pixels)
     # This is only important because of the instrument line profile (LSF)
     # In theory 8 is sufficient for any instrument. Some are probably fine at 4.
-    'model_resolution': 8, 
+    'model_resolution': 8,
+    'bary_corr_file': None,
     
     # Plotting parameters
     'dpi': 200, # the dpi used in plots

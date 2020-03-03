@@ -6,18 +6,26 @@ from the directory this file is in, install pychell_rvs with
 pip install .
 
 The code is generalized to support any instrument, but before doing so at least two classes need to be implemented:
-Until better documentation exists, see the iSHELL, CHIRON,or PARVI implementations for examples.
-All abstract methods existing for these classes must be implemnented.
+Until better documentation exists, also see the iSHELL, CHIRON,or PARVI implementations for examples.
+All abstract methods existing for these classes must be implemnented for a given instrument.
 1. SpecData
-    
 2. ForwardModel
 
-A folder for the instrument in the Spectrographs directory also needs to be created.
-See the other instruments for examples
-If in the same wavelength regime, some files can be used for any instrument (tellurics, star).
-They must still be copied.
-Any gas cell templates must also exist here.
-Finally, a parameters.py file must be created.
+A file in the "spectrographs" folder must be created with two dictionaries:
+1. default_instrument_parameters
+2. default_model_blueprints
+
+The default_instrument_parameters dictionary contains any instrument dependent parameters. It must define:
+1. spectrograph: the name of the spectrograph. Can be anything. (str)
+2. observatory: The name of the the observatory. (str)
+3. n_orders: the total number of possible orders (int)
+4. n_data_pix: the number of data pixels present in the data (int)
+5. crop_pix: default number of pixels cropped in the images. Must be the same for all orders (for now at least) (list; [int1, int2])
+6. n_template_fits: The default number of stellar template iterations (int)
+7. model_resolution: n_model_pixels = model_resolution * n_data_pixels (int)
+8. verbose: If True, prints the best fit parameters after each fit, and can be used to modify plots.
+
+It can define anything else helpful for this instrument used in the instrument specific forward model, model component, or data objects.
 
 Example Run For Barnard's Star (GJ 699) for iSHELL:
 
@@ -29,7 +37,7 @@ import pychell_rvs.pychell_rvs as pychell_rvs
 user_input_options = {
     "instrument": "iSHELL",
     "data_input_path": "/path/to/data/",
-    "filelist": "some_filelist.txt",
+    "filelist": "some_filelist.txt", # Contains the names of the files to be read in.
     "output_path": "/path/to/output/",
     "bary_corr_file": None, # calcualting bc vels can be incredibly slow depending on versions
     "star_name": "Star_Name", # Use underscores for spaces

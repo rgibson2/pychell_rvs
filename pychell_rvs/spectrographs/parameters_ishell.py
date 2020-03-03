@@ -17,9 +17,6 @@ default_instrument_parameters = {
     "spectrograph": "iSHELL",
     "observatory": "IRTF",
     
-    # The JPL ephemeris for barycorrpy
-    "bary_corr_file": None,
-    
     # Default iSHELL instrument KGAS settings
     "n_orders": 29,
     "n_data_pix": 2048,
@@ -28,19 +25,6 @@ default_instrument_parameters = {
     # Star Settings
     "n_template_fits": 40,
     "model_resolution": 8,
-    
-    # MCMC Settings, sort of implemented but not working yet.
-    "mcmc_burn_in_steps": 500,
-    "mcmc_main_steps": 50000,
-    "mcmc_walkers_factor": 8,
-    "min_GR": None,
-    
-    # By default the Nelder-Mead fitter fits the full par space, then consecutive pairs of N pars.
-    # So, [par1, par2], [par2, par3], [par3, par4], ..., [parN, par1]
-    # It does this whole process N times.
-    # Super does a custom Nelder-Mead where entire model components are varied individually instead of pairs.
-    # This may be more effective if a given parameter doesn't affect the entire spectral range of a given order (e.g. splines).
-    "do_super": False,
     
     # Whether or not to print best fit parameters and add template to plots
     "verbose": False
