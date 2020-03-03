@@ -1,0 +1,2 @@
+recursive-include pychell_rvs/spectrographs *
+recursive-include pychell_rvs/default_templates *
