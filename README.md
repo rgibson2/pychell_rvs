@@ -48,7 +48,6 @@ user_input_options = {
     "n_threads": 1,
     "verbose": True,
     "nights_for_template": 'all',
-    "optimize_star": False,
     "model_resolution": 4
 }
 

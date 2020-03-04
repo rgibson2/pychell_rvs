@@ -22,19 +22,6 @@ default_instrument_parameters = {
     
     "model_resolution": 8,
     
-    # MCMC Settings, sort of implemented but not working yet.
-    "mcmc_burn_in_steps": 500,
-    "mcmc_main_steps": 50000,
-    "mcmc_walkers_factor": 8,
-    "min_GR": None,
-    
-    # By default the Nelder-Mead fitter fits the full par space, then consecutive pairs of N pars.
-    # So, [par1, par2], [par2, par3], [par3, par4], ..., [parN, par1]
-    # It does this whole process N times.
-    # Super does a custom Nelder-Mead where entire model components are varied individually instead of pairs.
-    # This can be more effective if a given parameter doesn't affect the entire spectrum.
-    "do_super": False,
-    
     # Whether or not to print best fit parameters and add template to plots
     "verbose": False
 }

@@ -690,12 +690,12 @@ class PARVIForwardModel(ForwardModel):
             # Star
             star = self.models_dict['star'].build(pars, templates_dict['star'][:, 0], templates_dict['star'][:, 1], templates_dict['star'][:, 0])
             star_convolved = self.models_dict['lsf'].convolve_flux(star, lsf=lsf)
-            plt.plot(templates_dict['star'][:, 0] / 1E4, star_convolved - 1, label='Star', linewidth=gpars['lw'], color='deeppink', alpha=0.5)
+            plt.plot(templates_dict['star'][:, 0] / 1E4, star_convolved - 1.1, label='Star', linewidth=gpars['lw'], color='deeppink', alpha=0.5)
             
             # Tellurics
             tellurics = self.models_dict['tellurics'].build(pars, templates_dict['tellurics'], templates_dict['star'][:, 0])
             tellurics_convolved = self.models_dict['lsf'].convolve_flux(tellurics, lsf=lsf)
-            plt.plot(templates_dict['star'][:, 0] / 1E4, tellurics_convolved - 1, label='Telurics', linewidth=gpars['lw'], color='indigo', alpha=0.5)
+            plt.plot(templates_dict['star'][:, 0] / 1E4, tellurics_convolved - 1.1, label='Telurics', linewidth=gpars['lw'], color='indigo', alpha=0.5)
             
             plt.legend(loc='lower right')
                      

@@ -72,7 +72,7 @@ class SpecDataCHIRON(SpecData):
             self.BJD = JDUTC_to_BJDTDB(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
         else:
             self.bary_corr = gpars['bary_corrs'][self.spec_num]
-            self.BJD = gpars['bjds'][self.spec_num]
+            self.BJD = gpars['BJDS'][self.spec_num]
 
 # Keep data in memory
 class SpecDataiSHELL(SpecData):
@@ -112,7 +112,7 @@ class SpecDataiSHELL(SpecData):
             self.BJD = JDUTC_to_BJDTDB(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
         else:
             self.bary_corr = gpars['bary_corrs'][self.spec_num]
-            self.BJD = gpars['bjds'][self.spec_num]
+            self.BJD = gpars['BJDS'][self.spec_num]
 
 class SpecDataPARVI(SpecData):
     
@@ -150,4 +150,4 @@ class SpecDataPARVI(SpecData):
             self.BJD = JDUTC_to_BJDTDB(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
         else:
             self.bary_corr = gpars['bary_corrs'][self.spec_num]
-            self.BJD = gpars['bjds'][self.spec_num]
+            self.BJD = gpars['BJDS'][self.spec_num]
