@@ -22,7 +22,6 @@ from matplotlib import cm
 import scipy
 from scipy import constants as cs # cs.c = speed of light in m/s
 from scipy.special import comb
-import emcee # not used yet
 import numpy as np # Math, Arrays
 import scipy.interpolate # Cubic interpolation, Akima interpolation
 
