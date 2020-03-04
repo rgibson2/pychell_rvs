@@ -17,7 +17,6 @@ stop = pdb.set_trace
 import matplotlib # to set the backend
 import matplotlib.pyplot as plt # Plotting
 from matplotlib import cm
-import corner
 
 # Science/math
 import scipy
