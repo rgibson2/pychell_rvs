@@ -393,7 +393,7 @@ def cubic_spline_lsq_template(templates_dict, forward_models, iter_num, order_nu
     tot_weights_lr = np.empty(shape=(gpars['n_data_pix'], gpars['n_spec']), dtype=np.float64)
     
     # Weight by 1 / rms^2
-    rms = pcforwardmodels.ForwardModel.extract_rms(forward_models, iter_num, gpars)
+    rms = np.array([forward_models[ispec].opt[iter_num][0] for ispec in range(gpars['n_spec'])]) 
     rms_weights = 1 / rms**2
     if iter_num > 1:
         bad = np.where(rms_weights < 10)[0]

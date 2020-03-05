@@ -81,6 +81,58 @@ class GasCellModel(SpectralComponent):
     def __repr__(self):
         return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
     
+class GasCellModelOrderDependent(SpectralComponent):
+    
+    def __init__(self, order_num, blueprint, gpars):
+        self.enabled = False
+        if blueprint['input_file'] is not None:
+            self.enabled = True
+            self.input_file = blueprint['input_file']
+        self.name = blueprint['name']
+        self.base_par_names = ['_shift', '_depth']
+        self.par_names = [self.name + s for s in self.base_par_names]
+        self.order_num = order_num
+    
+    def build(self, pars, wave, flux, wave_final):
+        if self.enabled:
+            wave = wave + pars[self.par_names[0]].value # NOTE: Gas shift is additive in Angstroms
+            flux = flux ** pars[self.par_names[1]].value
+            return np.interp(wave_final, wave, flux, left=flux[0], right=flux[-1])
+        else:
+            return self.build_fake(wave_final.size)
+        
+    def build_fake(self, n):
+        return np.ones(n, dtype=float)
+    
+    def modify(self, v):
+        self.enabled = v
+        
+    def load_template(self, gpars):
+        print('Loading in Gas Cell Template ...', flush=True)
+        template = np.load(self.input_file)
+        wave, flux = template['wave'], template['flux']
+        good = np.where((wave > gpars['wave_left'] - 1) & (wave < gpars['wave_right'] + 1))[0]
+        template = np.array([wave[good], flux[good]]).T
+        return template
+    
+    def initialize_parameters(self, blueprint, gpars):
+        pars = []
+        shift = blueprint['shifts'][self.order_num]
+        depth = blueprint['depth']
+        pars.append(Parameter(name=self.par_names[0], value=shift, minv=shift - blueprint['shift_range'][0], maxv=shift + blueprint['shift_range'][1], mcmcscale=0.1))
+        pars.append(Parameter(name=self.par_names[1], value=depth[1], minv=depth[0], maxv=depth[2], mcmcscale=0.001))
+        return pars
+        
+    def __repr__(self):
+        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'    
+    
+    
+    
+    
+    
+    
+
+    
 class LSFHermiteModel(SpectralComponent):
     
     def __init__(self, order_num, blueprint, gpars):
@@ -291,8 +343,9 @@ class WaveModelKnown(SpectralComponent):
     
     def __init__(self, order_num, blueprint, gpars):
         self.enabled = True
-        self.n_splines = 0
+        self.n_splines = blueprint['n_splines']
         self.name = blueprint['name']
+        self.nx = gpars['n_data_pix']
         self.base_par_names = []
         if self.n_splines > 0:
             self.spline_pixel_set_points = np.linspace(gpars['pix_left'], gpars['pix_right'], num=self.n_splines + 1)
@@ -309,7 +362,7 @@ class WaveModelKnown(SpectralComponent):
             for i in range(self.n_splines + 1):
                 splines[i] = pars[self.par_names[i]].value
             wave_spline = scipy.interpolate.CubicSpline(self.spline_pixel_set_points, splines, bc_type='not-a-knot', extrapolate=True)(pixel_grid)
-            return wave_known + wave_spline
+            return wave_grid + wave_spline
     
     def build_fake(self):
         pass
@@ -321,9 +374,50 @@ class WaveModelKnown(SpectralComponent):
         pars = []
         if self.n_splines > 0:
             for i in range(self.n_splines + 1):
-                pars.append(Parameter(name=self.par_names[i+3], value=blueprint['spline'][1], minv=blueprint['spline'][0], maxv=blueprint['spline'][2], mcmcscale=0.001))
+                pars.append(Parameter(name=self.par_names[i], value=blueprint['spline'][1], minv=blueprint['spline'][0], maxv=blueprint['spline'][2], mcmcscale=0.001))
         return pars
     
+    
+    def __repr__(self):
+        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
+    
+    
+# Starts from a known wavelength solution plus spline offset
+# For CHIRON, we start with the ThAr wls and add splines since we have a gas cell.
+# For PARVI, we are provided the exact wls (so no splines)
+class LSFModelKnown(SpectralComponent):
+    
+    def __init__(self, order_num, blueprint, gpars):
+        self.enabled = True
+        self.name = blueprint['name']
+        self.base_par_names = []
+        self.par_names = []
+        self.dl_original = blueprint['dl_original']
+        self.dl = gpars['dl']
+        
+        self.nx_model = gpars['n_model_pix']
+        self.nx = blueprint['n_lsf_pix']
+        
+        # NOTE: FIX THIS! It depends on how the known LSF grid was computed. Maybe add to blueprint
+        # self.dl = blueprint['dl] # Then remove above line
+        self.x = np.arange(-(int(self.nx / 2)-1), int(self.nx / 2)+1, 1) * self.dl
+        
+    def build(self, pars, lsf):
+        return lsf
+    
+    def build_fake(self):
+        pass
+    
+    def convolve_flux(self, raw_flux, lsf):
+        padded_flux = np.pad(raw_flux, pad_width=(int(self.nx/2-1), int(self.nx/2)), mode='constant', constant_values=(raw_flux[0], raw_flux[-1]))
+        convolved_flux = np.convolve(padded_flux, lsf, 'valid')
+        return convolved_flux
+    
+    def modify(self):
+        pass
+    
+    def initialize_parameters(self, blueprint, gpars):
+        return []
     
     def __repr__(self):
         return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
