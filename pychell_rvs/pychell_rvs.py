@@ -964,8 +964,6 @@ def init_pipeline(user_input_options, user_model_blueprints):
     # Calculate some more parameters from the observations
     global_pars['BJDS_nightly'], global_pars['n_obs_nights'] = pcutils.get_nightly_jds(global_pars['BJDS'], global_pars)
     global_pars['n_nights'] = len(global_pars['n_obs_nights'])
-    
-    print(global_pars['BJDS'])
 
     # Save the global parameters dictionary to the output directory
     np.savez(global_pars['run_output_path'] + 'global_parameters_dictionary.npz', global_pars)
