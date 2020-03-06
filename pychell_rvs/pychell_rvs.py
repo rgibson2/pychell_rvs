@@ -968,7 +968,6 @@ def init_pipeline(user_input_options, user_model_blueprints):
     print(global_pars['BJDS'])
 
     # Save the global parameters dictionary to the output directory
-    #np.savetxt('bary_corrs_toi1411.txt', np.array([global_pars['BJDS'], global_pars['bary_corrs']]).T, delimiter=',')
     np.savez(global_pars['run_output_path'] + 'global_parameters_dictionary.npz', global_pars)
     
     # Matplotlib backend
