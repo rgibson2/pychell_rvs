@@ -24,6 +24,12 @@ default_config = {
     'model_resolution': 8,
     'bary_corr_file': None,
     
+    # If True, the best fit parameters are printed after each iteration
+    'verbose': False,
+    
+    # The number of pixels to crop on each side of the spectrum
+    'crop_pix': [50, 50],
+    
     # Plotting parameters
     'dpi': 200, # the dpi used in plots
     'lw': 0.8, # linewidth on fits

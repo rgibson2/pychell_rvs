@@ -98,7 +98,7 @@ default_model_blueprints = {
         'name': 'full_blaze', # The blaze model after a division from a flat field
         'class_name': 'FullBlazeModel',
         'n_splines': 0,
-        'base_amp': [1.02, 1.05, 1.15],
+        'base_amp': [1.02, 1.05, 1.4],
         'base_b': [0.008, 0.01, 0.04],
         'base_c': [-1, 0.01, 1],
         'base_d': [0.51, 0.7, 0.9],

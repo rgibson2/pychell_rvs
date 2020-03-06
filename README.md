@@ -17,13 +17,9 @@ A file in the "spectrographs" folder must be created with two dictionaries:
 
 The default_instrument_parameters dictionary contains any instrument dependent parameters. It must define:
 1. spectrograph: the name of the spectrograph. Can be anything. (str)
-2. observatory: The name of the the observatory. (str)
+2. observatory: The name of the the observatory. This must be recognized by astropy if not supplying own barycenter vels (str)
 3. n_orders: the total number of possible orders (int)
 4. n_data_pix: the number of data pixels present in the data (int)
-5. crop_pix: default number of pixels cropped in the images. Must be the same for all orders (for now at least) (list; [int1, int2])
-6. n_template_fits: The default number of stellar template iterations (int)
-7. model_resolution: n_model_pixels = model_resolution * n_data_pixels (int)
-8. verbose: If True, prints the best fit parameters after each fit, and can be used to modify plots.
 
 It can define anything else helpful for this instrument used in the instrument specific forward model, model component, or data objects.
 
@@ -31,7 +27,7 @@ Example Run For Barnard's Star (GJ 699) for iSHELL:
 
 Within a file called gj699.py:
 
-```
+``
 import pychell_rvs.pychell_rvs as pychell_rvs
 
 user_input_options = {
@@ -46,7 +42,6 @@ user_input_options = {
     "overwrite_output": 1,
     "n_template_fits": 0,
     "n_threads": 1,
-    "verbose": True,
     "nights_for_template": 'all',
     "model_resolution": 4
 }

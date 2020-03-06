@@ -484,6 +484,10 @@ class CHIRONForwardModel(ForwardModel):
             tellurics_convolved = self.models_dict['lsf'].convolve_flux(tellurics, lsf=lsf)
             plt.plot(templates_dict['star'][:, 0] / 10, tellurics_convolved - 1.1, label='Tellurics', linewidth=gpars['lw'], color='indigo', alpha=0.8)
             
+            # Blaze wavelength location
+            lamb = self.models_dict['blaze'].blaze_wave_estimate - pars[self.models_dict['blaze'].par_names[2]].value
+            plt.axvline(x=lamb/10, ymin=-0.1, ymax=1.2, color='black', linestyle=':')
+            
             plt.ylim(-1.1, 1.08)
             plt.legend(loc='lower right')
         else:
