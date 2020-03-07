@@ -185,17 +185,18 @@ def pychell_rvs_main(user_input_options, user_model_blueprints):
                 update_model_params(forward_models, iter_num+gpars['ndi'], gpars)
 
                 # Optimize or update the templates
-                if len(gpars['templates_to_optimize']) > 0:
-                    templates_optimized = optimize_templates(forward_models, templates_dict, iter_num, order_num, gpars)
-                    if 'star' in gpars['templates_to_optimize']:
-                        stellar_templates[:, iter_num+2] = templates_optimized['star'][:, 1]
-                    if 'lab' in gpars['templates_to_optimize']:
-                        templates_dict['lab'] = templates_optimized['lab']
-                    templates_dict['star'] = np.array([stellar_templates[:, 0], stellar_templates[:, iter_num+2]]).T
-                else:
-                    #stellar_templates[:, iter_num+2] = update_stellar_template(templates_dict, forward_models, iter_num+gpars['ndi'], order_num, gpars)
+                #if len(gpars['templates_to_optimize']) > 0:
+                #    templates_optimized = optimize_templates(forward_models, templates_dict, iter_num, order_num, gpars)
+                #    if 'star' in gpars['templates_to_optimize']:
+                #        stellar_templates[:, iter_num+2] = templates_optimized['star'][:, 1]
+                #    if 'lab' in gpars['templates_to_optimize']:
+                #        templates_dict['lab'] = templates_optimized['lab']
+                #    templates_dict['star'] = np.array([stellar_templates[:, 0], stellar_templates[:, iter_num+2]]).T
+                #else:
+                if gpars['n_nights'] < 3: 
                     cubic_spline_lsq_template(templates_dict, forward_models, iter_num+gpars['ndi'], order_num, gpars)
-                    #templates_dict['star'] = np.array([stellar_templates[:, 0], stellar_templates[:, iter_num+2]]).T
+                else:
+                    update_stellar_template(templates_dict, forward_models, iter_num+gpars['ndi'], order_num, gpars)
 
         # Save output dictionaries
         for i in range(gpars['n_spec']):
@@ -513,7 +514,7 @@ def update_stellar_template(templates_dict, forward_models, iter_num, order_num,
     residuals_min = np.empty(gpars['n_model_pix'], dtype=np.float64)
     
     # Weight by 1 / rms^2
-    rms = pcforwardmodels.ForwardModel.extract_rms(forward_models, iter_num, gpars)
+    rms = np.array([forward_models[ispec].opt[iter_num][0] for ispec in range(gpars['n_spec'])]) 
     rms_weights = 1 / rms**2
     
     if gpars['nights_for_template'] == 'all': # use all nights
@@ -522,8 +523,6 @@ def update_stellar_template(templates_dict, forward_models, iter_num, order_num,
         template_spec_indices = []
         for inight in gpars['nights_for_template']:
             template_spec_indices += pcutils.get_spec_indices_from_night(inight - 1, gpars)
-            
-            
 
     # Loop over spectra
     for ispec in range(gpars['n_spec']):
@@ -537,13 +536,10 @@ def update_stellar_template(templates_dict, forward_models, iter_num, order_num,
             wave_stellar_frame = forward_models[ispec].wavelength_solutions[:, iter_num] * np.exp(forward_models[ispec].data.bary_corr / cs.c)
             waves_shifted_lr[:, ispec] = wave_stellar_frame
 
-
-        residuals_lr[:, ispec] = forward_models[ispec].residuals[:, iter_num]
+        # Telluric Weights
         tell_flux_hr = forward_models[ispec].models_dict['tellurics'].build(forward_models[ispec].best_fit_pars[iter_num], templates_dict['tellurics'], current_template[:, 0])
         tell_flux_hr_convolved = forward_models[ispec].models_dict['lsf'].convolve_flux(tell_flux_hr, pars=forward_models[ispec].best_fit_pars[iter_num])
-        tell_flux_lr_convolved = np.interp(forward_models[ispec].wavelength_solutions[:, iter_num], current_template[:, 0], tell_flux_hr_convolved, left=np.nan, right=np.nan)
-        tell_weights = tell_flux_lr_convolved**2
-        tot_weights_lr[:, ispec] = forward_models[ispec].data.badpix * rms_weights[ispec] * tell_weights
+        tell_weights_hr = tell_flux_hr_convolved**2
 
         # For the high res grid, we need to interpolate the bad pixel mask onto high res grid.
         # Any pixels not equal to 1 after interpolation are considered bad.
@@ -553,16 +549,13 @@ def update_stellar_template(templates_dict, forward_models, iter_num, order_num,
             bad_pix_hr[bad, ispec] = 0
 
         # Weights for the high res residuals
-        tot_weights_hr[:, ispec] = rms_weights[ispec] * bad_pix_hr[:, ispec]
+        tot_weights_hr[:, ispec] = rms_weights[ispec] * bad_pix_hr[:, ispec] * tell_weights_hr
 
         # Only use finite values and known good pixels for interpolating up to the high res grid.
         # Even though bad pixels are ignored later when median combining residuals,
         # they will still affect interpolation in unwanted ways.
-        # Akima interpolation can be better than cubic when the second derivative is rapidly changing (which it is!)
-        # It allows for a bit more freedom than cubic splines.
-        # See https://en.wikipedia.org/wiki/Akima_spline
         good = np.where(np.isfinite(forward_models[ispec].residuals[:, iter_num]) & (forward_models[ispec].data.badpix == 1))
-        residuals_interp_hr = scipy.interpolate.Akima1DInterpolator(wave_stellar_frame[good], forward_models[ispec].residuals[good, iter_num].flatten())(current_template[:, 0])
+        residuals_interp_hr = scipy.interpolate.CubicSpline(wave_stellar_frame[good], forward_models[ispec].residuals[good, iter_num].flatten(), bc_type='not-a-knot', extrapolate=False)(current_template[:, 0])
 
         # Determine values with np.nans and set weights equal to zero
         bad = np.where(~np.isfinite(residuals_interp_hr))[0]
@@ -581,7 +574,6 @@ def update_stellar_template(templates_dict, forward_models, iter_num, order_num,
     # Additional Weights:
     # Up-weight spectra with poor BC sampling.
     # In other words, we weight by the inverse of the histogram values of the BC distribution
-    
     # Generate the histogram
     hist_counts, histx = np.histogram(gpars['bary_corrs'], bins=int(np.min([gpars['n_spec'], 10])), range=(np.min(gpars['bary_corrs'])-1, np.max(gpars['bary_corrs'])+1))
     
@@ -599,11 +591,9 @@ def update_stellar_template(templates_dict, forward_models, iter_num, order_num,
         for ispec in range(gpars['n_spec']):
             vbc = forward_models[ispec].data.bary_corr
             y = np.where(histx >= vbc)[0][0] - 1
-            tot_weights_lr[:, ispec] = tot_weights_lr[:, ispec] * number_weights[y]
             tot_weights_hr[:, ispec] = tot_weights_hr[:, ispec] * number_weights[y]
 
     # Only use specified nights
-    tot_weights_lr = tot_weights_lr[:, template_spec_indices]
     tot_weights_hr = tot_weights_hr[:, template_spec_indices]
     bad_pix_hr = bad_pix_hr[:, template_spec_indices]
     residuals_hr = residuals_hr[:, template_spec_indices]
@@ -640,54 +630,17 @@ def update_stellar_template(templates_dict, forward_models, iter_num, order_num,
     if bad.size > 0:
         residuals_median[bad] = 0
 
-    # Now to co-add residuals according to a least squares cubic spline
-    # Flatten the arrays
-    waves_shifted_lr_flat = waves_shifted_lr.flatten()
-    residuals_lr_flat = residuals_lr.flatten()
-    tot_weights_lr_flat = tot_weights_lr.flatten()
-    
-    # Remove all bad pixels.
-    good = np.where(np.isfinite(waves_shifted_lr_flat) & np.isfinite(residuals_lr_flat) & (tot_weights_lr_flat > 0))[0]
-    waves_shifted_lr_flat, residuals_lr_flat, tot_weights_lr_flat = waves_shifted_lr_flat[good], residuals_lr_flat[good], tot_weights_lr_flat[good]
-
-    # Sort the wavelengths
-    sorted_inds = np.argsort(waves_shifted_lr_flat)
-    waves_shifted_lr_flat, residuals_lr_flat, tot_weights_lr_flat = waves_shifted_lr_flat[sorted_inds], residuals_lr_flat[sorted_inds], tot_weights_lr_flat[sorted_inds]
-    
-    # Knot points are roughly the detector grid. The 0.01 pad is to meet the 
-    knots_init = np.linspace(waves_shifted_lr_flat[0]+0.01, waves_shifted_lr_flat[-1]-0.01, num=gpars['n_use_data_pix'])
-    bad_knots = []
-    for iknot in range(len(knots_init) - 1):
-        n = np.where((waves_shifted_lr_flat > knots_init[iknot]) & (waves_shifted_lr_flat < knots_init[iknot+1]))[0].size
-        if n == 0:
-            bad_knots.append(iknot + 1)
-    bad_knots = np.array(bad_knots)
-    knots = np.delete(knots_init, bad_knots)
-
-    # Do the fit
-    tot_weights_lr_flat /= np.nansum(tot_weights_lr_flat)
-    spline_fitter = scipy.interpolate.LSQUnivariateSpline(waves_shifted_lr_flat, residuals_lr_flat, t=knots, w=tot_weights_lr_flat, k=3, ext=1, bbox=[waves_shifted_lr_flat[0], waves_shifted_lr_flat[-1]], check_finite=True)
-    
-    # Use the fit to determine the hr residuals to add
-    residuals_hr_fit = spline_fitter(current_template[:, 0])
-
-    # Remove bad regions
-    bad = np.where((current_template[:, 0] < knots[0]) | (current_template[:, 0] > knots[-1]))[0]
-    if bad.size > 0:
-        residuals_hr_fit[bad] = 0
-
     # Augment the template
-    new_flux = current_template[:, 1] + residuals_hr_fit
-    
-    # Add median residuals to current template to generate the template for the next iteration
-    #new_flux = current_template[:, 1] + residuals_median
+    new_flux = current_template[:, 1] + residuals_median
 
     # Force the max to be less than 1.
     bad = np.where(new_flux > 1)[0]
     if bad.size > 0:
         new_flux[bad] = 1.0
-
-    return new_flux
+        
+    templates_dict['star'] = np.array([current_stellar_template[:, 0], new_flux]).T
+    
+    
 
 # Later on the individual RVs are typically combined in a user specific way
 # The co-added (nightly) RVs are mainly for output plots of individual orders
@@ -982,7 +935,7 @@ def init_pipeline(user_input_options, user_model_blueprints):
     print('MODEL RESOLUTION: ' + str(global_pars['model_resolution']) + ' x THE DATA', flush=True)
     print('TAG: ' + global_pars['tag'], flush=True)
     print('N TEMPLATE ITERATIONS: ' + str(global_pars['n_template_fits']), flush=True)
-    print('N ECHELLE ORDERS: ' + str(global_pars['n_do_orders']), flush=True)
+    print('N ECHELLE ORDERS TO FIT: ' + str(global_pars['n_do_orders']), flush=True)
     print('N CORES USED: ' + str(global_pars['n_threads']), flush=True)
 
     return global_pars, model_blueprints, data_all_first_order

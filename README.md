@@ -23,11 +23,26 @@ The default_instrument_parameters dictionary contains any instrument dependent p
 
 It can define anything else helpful for this instrument used in the instrument specific forward model, model component, or data objects.
 
+Each instrument must also define a dictionary called default_model_blueprints. This dictionary contains the blueprints to construct the forward model. Some keys in this dictionary are special. It must contain a 'star', 'lsf', and 'wavelength_solution'. Each item is then a dictionary which contains helpful info to construct that model component. Each model component must be tied to a class which implements/extends the SpectralComponent abstract class. An example entry is below:
+
+```
+'star': {
+        'name': 'star',
+        'class_name': 'StarModel',
+        'input_file': None,
+        'vel': [-np.inf, 0, np.inf]
+    }
+```
+
+The name can be anything. The class_name must point to the class and live in the file pychell_rvs_spectral_components.py.
+The input_file is the full path+filename to the stellar template file used. If None, things will start from a flat template.
+The 'vel' key is the initial conditions for the stellar doppler shift parameter. These classes can have any remaining keywords that inform the model. When each class is initialized, it is given the above dictionary and the order number.
+
 Example Run For Barnard's Star (GJ 699) for iSHELL:
 
 Within a file called gj699.py:
 
-``
+```
 import pychell_rvs.pychell_rvs as pychell_rvs
 
 user_input_options = {

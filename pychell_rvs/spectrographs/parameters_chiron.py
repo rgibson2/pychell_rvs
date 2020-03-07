@@ -123,6 +123,6 @@ default_model_blueprints = {
         'name': 'wavesol_ThAr_I2',
         'class_name': 'WaveModelKnown',
         'n_splines': 20,
-        'spline': [-0.005, 0.0005, 0.005]
+        'spline': [-0.03, 0.0005, 0.03]
     }
 }

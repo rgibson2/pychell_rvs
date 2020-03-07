@@ -22,10 +22,6 @@ default_instrument_parameters = {
     "n_data_pix": 2048,
     "crop_pix": [200, 200],
     
-    # Star Settings
-    "n_template_fits": 40,
-    "model_resolution": 8,
-    
     # Whether or not to print best fit parameters and add template to plots
     "verbose": False
 }
