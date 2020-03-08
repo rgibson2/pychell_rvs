@@ -12,8 +12,8 @@ stop = pdb.set_trace
 import numpy as np # Math, Arrays
 
 # Astropy
-#from astropy.time import Time
-#from astropy.coordinates import EarthLocation
+from astropy.time import Time
+from astropy.coordinates import EarthLocation
 #EarthLocation._get_site_registry(force_download=True)
 
 # User defined/pip modules
