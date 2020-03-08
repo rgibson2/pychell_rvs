@@ -82,6 +82,7 @@ def round_to(x, sig=3):
     return round(x, sig - int(np.floor(np.log10(np.abs(x)))) - 1)
 
 # Returns the hermite polynomial of degree deg over the variable x
+@njit(numba.types.double[:, :](numba.types.double[:], numba.types.int64))
 def hermfun(x, deg):
     herm0 = np.pi**-0.25 * np.exp(-1.0 * x**2 / 2.0)
     herm1 = np.sqrt(2) * herm0 * x
@@ -201,6 +202,7 @@ def mad(x):
 
 # Given 3 data points this returns the polynomial coefficients via matrix inversion, effectively
 # In theory equivalent to np.polyval(x, y, deg=2)
+@njit(double[:](double[:], double[:]))
 def poly_coeffs(x, y):
     a0 = (-x[2] * y[1] * x[0]**2 + x[1] * y[2] * x[0]**2 + x[2]**2 * y[1] * x[0] - x[1]**2 * y[2] * x[0] - x[1] * x[2]**2 * y[0] + x[1]**2 * x[2] * y[0])/((x[0] - x[1]) * (x[0] - x[2]) * (x[1] - x[2]))
     a1 = (y[1] * x[0]**2 - y[2] * x[0]**2 - x[1]**2 * y[0] + x[2]**2 * y[0] - x[2]**2 * y[1] + x[1]**2 * y[2]) / ((x[0] - x[1]) * (x[0] - x[2]) * (x[1] - x[2]))
