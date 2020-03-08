@@ -193,7 +193,7 @@ def pychell_rvs_main(user_input_options, user_model_blueprints):
                 #        templates_dict['lab'] = templates_optimized['lab']
                 #    templates_dict['star'] = np.array([stellar_templates[:, 0], stellar_templates[:, iter_num+2]]).T
                 #else:
-                if gpars['n_nights'] < 3: 
+                if gpars['n_nights'] >= 3: 
                     cubic_spline_lsq_template(templates_dict, forward_models, iter_num+gpars['ndi'], order_num, gpars)
                 else:
                     update_stellar_template(templates_dict, forward_models, iter_num+gpars['ndi'], order_num, gpars)
@@ -499,7 +499,7 @@ def cubic_spline_lsq_template(templates_dict, forward_models, iter_num, order_nu
 
 def update_stellar_template(templates_dict, forward_models, iter_num, order_num, gpars):
     
-    current_template = np.copy(templates_dict['star'])
+    current_stellar_template = np.copy(templates_dict['star'])
 
     # Stores the shifted high resolution residuals (all on the star grid)
     residuals_hr = np.empty(shape=(gpars['n_model_pix'], gpars['n_spec']), dtype=np.float64)
@@ -535,13 +535,13 @@ def update_stellar_template(templates_dict, forward_models, iter_num, order_num,
             wave_stellar_frame = forward_models[ispec].wavelength_solutions[:, iter_num] * np.exp(forward_models[ispec].data.bary_corr / cs.c)
 
         # Telluric Weights
-        tell_flux_hr = forward_models[ispec].models_dict['tellurics'].build(forward_models[ispec].best_fit_pars[iter_num], templates_dict['tellurics'], current_template[:, 0])
+        tell_flux_hr = forward_models[ispec].models_dict['tellurics'].build(forward_models[ispec].best_fit_pars[iter_num], templates_dict['tellurics'], current_stellar_template[:, 0])
         tell_flux_hr_convolved = forward_models[ispec].models_dict['lsf'].convolve_flux(tell_flux_hr, pars=forward_models[ispec].best_fit_pars[iter_num])
         tell_weights_hr = tell_flux_hr_convolved**2
 
         # For the high res grid, we need to interpolate the bad pixel mask onto high res grid.
         # Any pixels not equal to 1 after interpolation are considered bad.
-        bad_pix_hr[:, ispec] = np.interp(current_template[:, 0], wave_stellar_frame, forward_models[ispec].data.badpix, left=0, right=0)
+        bad_pix_hr[:, ispec] = np.interp(current_stellar_template[:, 0], wave_stellar_frame, forward_models[ispec].data.badpix, left=0, right=0)
         bad = np.where(bad_pix_hr[:, ispec] < 1)[0]
         if bad.size > 0:
             bad_pix_hr[bad, ispec] = 0
@@ -553,7 +553,7 @@ def update_stellar_template(templates_dict, forward_models, iter_num, order_num,
         # Even though bad pixels are ignored later when median combining residuals,
         # they will still affect interpolation in unwanted ways.
         good = np.where(np.isfinite(forward_models[ispec].residuals[:, iter_num]) & (forward_models[ispec].data.badpix == 1))
-        residuals_interp_hr = scipy.interpolate.CubicSpline(wave_stellar_frame[good], forward_models[ispec].residuals[good, iter_num].flatten(), bc_type='not-a-knot', extrapolate=False)(current_template[:, 0])
+        residuals_interp_hr = scipy.interpolate.CubicSpline(wave_stellar_frame[good], forward_models[ispec].residuals[good, iter_num].flatten(), bc_type='not-a-knot', extrapolate=False)(current_stellar_template[:, 0])
 
         # Determine values with np.nans and set weights equal to zero
         bad = np.where(~np.isfinite(residuals_interp_hr))[0]
@@ -629,7 +629,7 @@ def update_stellar_template(templates_dict, forward_models, iter_num, order_num,
         residuals_median[bad] = 0
 
     # Augment the template
-    new_flux = current_template[:, 1] + residuals_median
+    new_flux = current_stellar_template[:, 1] + residuals_median
 
     # Force the max to be less than 1.
     bad = np.where(new_flux > 1)[0]
