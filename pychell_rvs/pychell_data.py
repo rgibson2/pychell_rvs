@@ -3,8 +3,8 @@ from collections import OrderedDict
 from abc import ABC, abstractmethod # Abstract classes
 import glob # File searching
 import sys # sys utils
-from barycorrpy import get_BC_vel # BC velocity correction
-from barycorrpy.utc_tdb import JDUTC_to_BJDTDB
+#from barycorrpy import get_BC_vel # BC velocity correction
+#from barycorrpy.utc_tdb import JDUTC_to_BJDTDB
 import pdb # debugging
 stop = pdb.set_trace
 
@@ -12,7 +12,7 @@ stop = pdb.set_trace
 import numpy as np # Math, Arrays
 
 # Astropy
-from astropy.time import Time
+#from astropy.time import Time
 #from astropy.coordinates import EarthLocation
 #EarthLocation._get_site_registry(force_download=True)
 

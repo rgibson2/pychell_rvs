@@ -531,10 +531,8 @@ def update_stellar_template(templates_dict, forward_models, iter_num, order_num,
         # Or best doppler shift if using a non flat initial template
         if gpars['do_init_guess']:
             wave_stellar_frame = forward_models[ispec].wavelength_solutions[:, iter_num] * np.exp(-1 * forward_models[ispec].best_fit_pars[iter_num][forward_models[ispec].models_dict['star'].par_names[0]].value / cs.c)
-            waves_shifted_lr[:, ispec] = wave_stellar_frame
         else:
             wave_stellar_frame = forward_models[ispec].wavelength_solutions[:, iter_num] * np.exp(forward_models[ispec].data.bary_corr / cs.c)
-            waves_shifted_lr[:, ispec] = wave_stellar_frame
 
         # Telluric Weights
         tell_flux_hr = forward_models[ispec].models_dict['tellurics'].build(forward_models[ispec].best_fit_pars[iter_num], templates_dict['tellurics'], current_template[:, 0])
