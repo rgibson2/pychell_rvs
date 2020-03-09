@@ -48,7 +48,7 @@ class SpecDataCHIRON(SpecData):
     def parse(self, order_num, spec_num, gpars):
         
         # Load the flux, flux unc, and bad pix arrays
-        fname = glob.glob(gpars['data_input_path'] + self.input_file[:-5] + '_ord' + str(order_num+1) + '.npz')[0]
+        fname = glob.glob(gpars['data_input_path'] + self.input_file[:-4] + '_ord' + str(order_num+1) + '.npz')[0]
         data_ = np.load(fname, allow_pickle=True)
         self.wave_grid, self.flux = data_['wave'], data_['flux']
         self.flux /= pcmath.weighted_median(self.flux, med_val=0.98)

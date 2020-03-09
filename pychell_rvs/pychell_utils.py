@@ -94,7 +94,7 @@ def estimate_wavegrid_endpoints(data, order_num, blueprint, gpars):
         wavesol_base_wave_set_points = np.array([blueprint['base_set_point_1'][order_num], blueprint['base_set_point_2'][order_num], blueprint['base_set_point_3'][order_num]])
     
         # Get the polynomial coeffs through matrix inversion.
-        wave_estimate_coeffs = pcmath.poly_coeffs(blueprint['base_pixel_set_points'], wavesol_base_wave_set_points)
+        wave_estimate_coeffs = pcmath.poly_coeffs(np.array(blueprint['base_pixel_set_points']), wavesol_base_wave_set_points)
     
         # The estimated wavelength grid
         wave_estimate = np.polyval(wave_estimate_coeffs, np.arange(gpars['n_data_pix']))

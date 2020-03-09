@@ -290,7 +290,7 @@ class WaveSolModelFull(SpectralComponent):
     def __init__(self, order_num, blueprint, gpars):
         self.name = blueprint['name']
         self.n_splines = blueprint['n_splines']
-        self.base_pixel_set_points = blueprint['base_pixel_set_points']
+        self.base_pixel_set_points = np.array(blueprint['base_pixel_set_points'])
         self.base_wave_zero_points = np.array([blueprint['base_set_point_1'][order_num], blueprint['base_set_point_2'][order_num], blueprint['base_set_point_3'][order_num]])
         self.nx = gpars['n_data_pix']
         self.base_par_names = ['_wave_lagrange_1', '_wave_lagrange_2', '_wave_lagrange_3']
