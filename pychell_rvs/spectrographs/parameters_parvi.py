@@ -62,7 +62,7 @@ default_model_blueprints = {
         'components': {
             'water': {
                 'input_file': default_templates_path + 'telluric_water_tapas.npz',
-                'depth': [0.01, 1.5, 4.0],
+                'depth': [0.01, 1.5, 5.0],
             },
             'methane': {
                 'input_file': default_templates_path + 'telluric_methane_tapas.npz',
