@@ -18,6 +18,10 @@ default_config = {
     # Star Settings
     'n_template_fits': 10, # a zeroth iteration (flat template) does not count towards this number.
     
+    # Cross correlation / bisector span stuff for each iteration. Will take longer, but can be useful
+    # A cross correlation will still be run on a "zeroth" iteration.
+    'do_xcorr': False,
+    
     # Model Resolution (n_model_pixels = model_resolution * n_data_pixels)
     # This is only important because of the instrument line profile (LSF)
     # In theory 8 is sufficient for any instrument. Some are probably fine at 4.
@@ -25,13 +29,15 @@ default_config = {
     'bary_corr_file': None,
     
     # If True, the best fit parameters are printed after each iteration
-    'verbose': False,
+    'verbose_plot': True,
+    'verbose_print': False,
     
     # The number of pixels to crop on each side of the spectrum
     'crop_pix': [50, 50],
     
     # Plotting parameters
     'dpi': 200, # the dpi used in plots
+    'wave_units': 'nm', # possible options are 'nm', 'angstroms', 'microns'
     'lw': 0.8, # linewidth on fits
     'spec_img_width_pix': 2000, # in pixels
     'spec_img_height_pix': 720, # in pixels

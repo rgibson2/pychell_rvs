@@ -40,7 +40,8 @@ import pychell_rvs.pychell_utils as pcutils # random helpful functions
 def pychell_rvs_main(user_input_options, user_model_blueprints):
 
     # Start the main clock!
-    ti_main = time.time()
+    stopwatch = pcutils.StopWatch()
+    stopwatch.lap(name='ti_main')
 
     # Set things up and create a dictionary gpars used throughout the code
     gpars, model_blueprints, data_all_first_order = init_pipeline(user_input_options, user_model_blueprints)
@@ -156,20 +157,16 @@ def pychell_rvs_main(user_input_options, user_model_blueprints):
         for iter_num in range(gpars['n_template_fits']):
 
             print('Starting Iteration: ' + str(iter_num+1) + ' of ' + str(gpars['n_template_fits']), flush=True)
-
-            ti_iter = time.time()
+            stopwatch.lap(name='ti_iter')
 
             fit_spectra(forward_models, iter_num+gpars['ndi'], templates_dict, gpars)
-            tf_iter = time.time()
-            print('Finished Iteration ' + str(iter_num+1) + ' in ' + str(round(tf_iter-ti_iter, 2)/3600) + ' hours', flush=True)
+            print('Finished Iteration ' + str(iter_num+1) + ' in ' + str(round(stopwatch.time_since(name='ti_iter'), 2)/3600) + ' hours', flush=True)
 
             # Generate RVs
             # Extract doppler shifts from the Parameters Objects and compute nightly RVs
-
-            cross_correlate_all(forward_models, templates_dict, iter_num, gpars, update_from=False)
+            if gpars['do_xcorr']:
+                
             rvs[:, iter_num], rvs_cd[:, iter_num], rvs_unc_cd[:, iter_num], rvs_xcorr[:, iter_num] = compute_rvs(forward_models, iter_num, gpars)
-            #bispans_all[:, b] = compute_bisector_spans(forward_models, templates_dict['star'], rvs_xcorr[:, b], iter_num, gpars)
-
             # Save RVs, will continuously overwrite, but useful to look at on the fly
             np.savez(gpars['run_output_path'] + 'Order' + str(order_num+1) + os.sep + 'RVs' + os.sep + gpars['full_tag'] + '_rvs_ord' + str(order_num+1) + '.npz', rvs=rvs, rvs_cd=rvs_cd, rvs_xcorr=rvs_xcorr, BJDS_cd=gpars['BJDS_nightly'], BJDS=gpars['BJDS'], n_obs_nights=gpars['n_obs_nights'], bisector_spans=bispans_all, unc=rvs_unc_cd)
 
@@ -183,32 +180,24 @@ def pychell_rvs_main(user_input_options, user_model_blueprints):
 
                 # Update the forward model initial_parameters.
                 update_model_params(forward_models, iter_num+gpars['ndi'], gpars)
-
-                # Optimize or update the templates
-                #if len(gpars['templates_to_optimize']) > 0:
-                #    templates_optimized = optimize_templates(forward_models, templates_dict, iter_num, order_num, gpars)
-                #    if 'star' in gpars['templates_to_optimize']:
-                #        stellar_templates[:, iter_num+2] = templates_optimized['star'][:, 1]
-                #    if 'lab' in gpars['templates_to_optimize']:
-                #        templates_dict['lab'] = templates_optimized['lab']
-                #    templates_dict['star'] = np.array([stellar_templates[:, 0], stellar_templates[:, iter_num+2]]).T
-                #else:
-                if gpars['n_nights'] >= 3: 
+                
+                # Update the template through least squares cubic spline interpolation if there are more than 5 nights.
+                # Otherwise interpolate each grid of residuals onto a common grid with cubic spline interpolation, then crunch using weighted median
+                if gpars['n_nights'] >= 5:
                     cubic_spline_lsq_template(templates_dict, forward_models, iter_num+gpars['ndi'], order_num, gpars)
                 else:
                     update_stellar_template(templates_dict, forward_models, iter_num+gpars['ndi'], order_num, gpars)
 
-        # Save output dictionaries
+        # Save forward model outputs
         for i in range(gpars['n_spec']):
             print('Creating Final Outputs For Spec ' + str(i+1) + ' Of ' + str(gpars['n_spec']) + ' ...', flush=True)
             forward_models[i].save_final_outputs(gpars)
 
-        # Stellar Template Outputs
-        np.savetxt(gpars['run_output_path'] + 'Order' + str(order_num+1) + os.sep + 'Stellar_Templates' + os.sep + gpars['full_tag'] + '_stellar_templates_ord' + str(order_num+1) + '.txt', stellar_templates, delimiter=',')
+        # Save Stellar Template Outputs
+        np.savez(gpars['run_output_path'] + 'Order' + str(order_num+1) + os.sep + 'Stellar_Templates' + os.sep + gpars['full_tag'] + '_stellar_templates_ord' + str(order_num+1) + '.npz', stellar_templates=stellar_templates)
 
     # End the clock!
-    tf_main = time.time()
-    print('ALL DONE! Runtime: ' + str(round((tf_main - ti_main) / 3600, 2)) + ' hours', flush=True)
+    print('ALL DONE! Runtime: ' + str(round(stopwatch.lap(name='ti_main') / 3600, 2)) + ' hours', flush=True)
 
 def cross_correlate_all(forward_models, templates_dict, iter_num, gpars, update_from=False):
 
@@ -337,7 +326,10 @@ def find_closest_depth(x, y, val):
 # Computes the bisector span
 # If the rvs are correlated with bisector span, we model this with linear regression (rvs=rvs(bs))
 # Then we subtract off the best fit model from the RVs.
-def compute_bisector_spans(forward_models, stellar_template, rvs, iter_num, gpars):
+def compute_bisector_spans(forward_models, templates_dict, rvs, iter_num, gpars):
+    
+    stellar_template = templates_dict['star']
+    
     # B(d) = (v_l(d) + v_r(d)) / 2
     # v_l = velocities located on the left side from the minimum of the CCF peak and v_r are the ones on the right side
     # Mean bisector is computed at two depth ranges:
@@ -394,7 +386,7 @@ def cubic_spline_lsq_template(templates_dict, forward_models, iter_num, order_nu
     tot_weights_lr = np.empty(shape=(gpars['n_data_pix'], gpars['n_spec']), dtype=np.float64)
     
     # Weight by 1 / rms^2
-    rms = np.array([forward_models[ispec].opt[iter_num][0] for ispec in range(gpars['n_spec'])]) 
+    rms = np.array([forward_models[ispec].opt[iter_num][0] for ispec in range(gpars['n_spec'])])
     rms_weights = 1 / rms**2
     if iter_num > 1:
         bad = np.where(rms_weights < 10)[0]
@@ -649,7 +641,8 @@ def compute_rvs(forward_models, iter_num, gpars):
     unc_cd = np.full(gpars['n_nights'], fill_value=np.nan)
 
     star_vels = pcforwardmodels.ForwardModel.extract_parameter_values(forward_models, forward_models[0].models_dict['star'].par_names[0], iter_num+gpars['ndi'], gpars)
-    rms = pcforwardmodels.ForwardModel.extract_rms(forward_models, iter_num+gpars['ndi'], gpars)
+    star_vels = np.array([forward_models[ispec].best_fit_pars[iter_num][forward_models.models_dict['star'].par_names[0]] for ispec in range(gpars['n_spec'])])
+    rms = np.array([forward_models[ispec].opt[iter_num][0] for ispec in range(gpars['n_spec'])])
 
     # Per epoch RVs
     rvs = star_vels + gpars['bary_corrs']
@@ -749,7 +742,7 @@ def solver_wrapper(forward_model, iter_num, templates_dict, gpars):
     forward_model.wavelength_solutions[:, iter_num] = wave_grid_data
     forward_model.models[:, iter_num] = best_model
 
-    # Compute the residuals between the data and model, don't flat bad pixels here.
+    # Compute the residuals between the data and model, don't flag bad pixels here. Cropped pix are still nan
     forward_model.residuals[:, iter_num] = forward_model.data.flux - best_model
 
     if gpars['verbose']:
@@ -758,6 +751,10 @@ def solver_wrapper(forward_model, iter_num, templates_dict, gpars):
         print('Function Calls = ' + str(result[2]))
 
     forward_model.opt[iter_num, :] = result[1:]
+    
+    if gpars['do_xcorr']:
+        forward_model.cross_correlate(templates_dict, iter_num, gpars)
+        compute_bisector_spans(forward_models, templates_dict, rvs, iter_num, gpars)
 
     tf = time.time()
     dt = str(round((tf - ti) / 60, 3))
@@ -867,7 +864,7 @@ def init_pipeline(user_input_options, user_model_blueprints):
                 order = str(i+1)
                 os.makedirs(global_pars['run_output_path'] + 'Order' + order + os.sep + 'RVs')
                 os.makedirs(global_pars['run_output_path'] + 'Order' + order + os.sep + 'Fits')
-                os.makedirs(global_pars['run_output_path'] + 'Order' + order + os.sep + 'Pars')
+                os.makedirs(global_pars['run_output_path'] + 'Order' + order + os.sep + 'Opt')
                 os.makedirs(global_pars['run_output_path'] + 'Order' + order + os.sep + 'Stellar_Templates')
     elif isdir and overwrite:
         for i in range(global_pars['n_orders']):
@@ -877,7 +874,7 @@ def init_pipeline(user_input_options, user_model_blueprints):
                 if not issubdir:
                     os.makedirs(global_pars['run_output_path'] + 'Order' + order + os.sep + 'RVs')
                     os.makedirs(global_pars['run_output_path'] + 'Order' + order + os.sep + 'Fits')
-                    os.makedirs(global_pars['run_output_path'] + 'Order' + order + os.sep + 'Pars')
+                    os.makedirs(global_pars['run_output_path'] + 'Order' + order + os.sep + 'Opt')
                     os.makedirs(global_pars['run_output_path'] + 'Order' + order + os.sep + 'Stellar_Templates')
 
     # Update plotting parameters

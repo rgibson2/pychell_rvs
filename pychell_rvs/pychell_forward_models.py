@@ -37,9 +37,7 @@ class ForwardModel(ABC):
     
     def __init__(self, spec_num, order_num, models_dict, data, initial_parameters, gpars):
     
-        # Required Data Variables
-        self.spec_num = spec_num # int
-        self.order_num = order_num # int
+        # Required Data Variable
         self.data = data # object
         
         # Parameters Object, updated each iteration.
@@ -50,53 +48,60 @@ class ForwardModel(ABC):
         # Neither this or templates_dict can be empty. Otherwise there are no models.
         self.models_dict = models_dict
         
-        # Storage arrays
+        # Storage arrays after each iteration
+        
+        # Stores the final RMS [0] and target function calls [1]
         self.opt = np.empty(shape=(gpars['n_template_fits']+gpars['ndi'], 2), dtype=np.float64)
+        
+        # Stores the best fit parameters (Parameter objects)
         self.best_fit_pars = np.empty(shape=(gpars['n_template_fits']+gpars['ndi']), dtype=pcmodelcomponents.Parameters)
+        
+        # Stores the wavelenth solutions (may just be copies if known a priori)
         self.wavelength_solutions = np.empty(shape=(gpars['n_data_pix'], gpars['n_template_fits']+gpars['ndi']), dtype=np.float64)
+        
+        # Stores the residuals
         self.residuals = np.empty(shape=(gpars['n_data_pix'], gpars['n_template_fits']+gpars['ndi']), dtype=np.float64)
+        
+        # Stores the best fit forward models (built from best_fit_pars)
         self.models = np.empty(shape=(gpars['n_data_pix'], gpars['n_template_fits']+gpars['ndi']), dtype=np.float64)
-        self.cross_correlations = np.empty(gpars['n_template_fits']+gpars['ndi'], dtype=np.ndarray)
+        
+        # Stores the cross correlation vels which correspond to the above cross_correlation arrays
         self.cross_correlation_vels = np.empty(gpars['n_template_fits']+gpars['ndi'], dtype=np.ndarray)
+        
+        # Stores full cross correlation functions (really brute force RMS minimzation through velocity space)
+        self.cross_correlations = np.empty(gpars['n_template_fits']+gpars['ndi'], dtype=np.ndarray)
+        
+        # Stores the line bisectors
         self.bisectors = np.empty(gpars['n_template_fits']+gpars['ndi'], dtype=np.ndarray)
+        
+        # Stores the line bisector spans (calculated from line bisectors) (bias_top_of_bs - bias_bottom_of_bs)
         self.bisector_spans = np.empty(gpars['n_template_fits']+gpars['ndi'], dtype=np.float64)
         
-        self.residuals_post_compare = np.empty(gpars['n_data_pix'], dtype=np.float64)
-        
-        # MCMC results
-        self.mcmc_best_fit_pars = None
-        self.mcmc_wavelength_solution = None
-        self.mcmc_model = None
-        self.mcmc_residuals = None
-        
-    # Must define a build_full method
+    # Must define a build_full method which returns wave, model_flux on the detector grid
     # Can also define other build methods that return modified forward models
     @abstractmethod
-    def build_full(self, pars, templates, *args, **kwargs):
+    def build_full(self, pars, templates_dict, *args, **kwargs):
         pass
         
-    # Output after last iteration
+    # Save outputs after last iteration. This method can be implemented or not and super can be called or not.
     def save_final_outputs(self, gpars):
+        
+        # Helpful strings
         ord_dir = gpars['run_output_path'] + 'Order' + str(self.order_num+1) + os.sep
         ord_spec = '_ord' + str(self.order_num+1) + '_spec' + str(self.spec_num+1)
-        filename_opt = ord_dir + gpars['full_tag'] + '_opt' + ord_spec + '.npz'
-        filename_data_models = ord_dir + gpars['full_tag'] + '_data_models' + ord_spec + '.npz'
-        filename_cross_corrs = ord_dir + gpars['full_tag'] + '_cross_corrs' + ord_spec + '.npz'
-        data_arr = np.array([self.data.flux, self.data.flux_unc, self.data.badpix]).T
+        
+        # Best fit parameters and opt array
+        filename_opt = ord_dir + 'Opt' + gpars['full_tag'] + '_opt' + ord_spec + '.npz'
         np.savez(filename_opt, best_fit_pars=self.best_fit_pars, opt=self.opt)
+        
+        # Data flux, flux_unc, badpix, best fit forward models, and residuals
+        filename_data_models = ord_dir + gpars['full_tag'] + '_data_models' + ord_spec + '.npz'
+        data_arr = np.array([self.data.flux, self.data.flux_unc, self.data.badpix]).T
         np.savez(filename_data_models, wavelength_solutions=self.wavelength_solutions, residuals=self.residuals, models=self.models, data=data_arr, obs_details=self.data.obs_details)
         
-    def extract_parameter_values(forward_models, par_name, iter_num, gpars):
-        v = np.empty(gpars['n_spec'], dtype=np.float64)
-        for ispec in range(gpars['n_spec']):
-            v[ispec] = forward_models[ispec].best_fit_pars[iter_num][par_name].value
-        return v
-    
-    def extract_rms(forward_models, iter_num, gpars):
-        rms = np.empty(gpars['n_spec'], dtype=np.float64)
-        for ispec in range(gpars['n_spec']):
-            rms[ispec] = forward_models[ispec].opt[iter_num, 0]
-        return rms
+        # Cross correlation correlation stuff
+        filename_cross_corrs = ord_dir + gpars['full_tag'] + '_cross_corrs' + ord_spec + '.npz'
+        np.savez(filename_cross_corrs, self.)
                 
     def pretty_print(self, iter_num):
         # Loop over models
@@ -112,9 +117,90 @@ class ForwardModel(ABC):
     def modify(self, *args, **kwargs):
         pass
     
-    @abstractmethod
-    def plot(self, *args, **kwargs):
-        pass
+    def plot(self, iter_num, templates_dict, gpars, save=False):
+        
+        # Extract the low res wave grid in proper units
+        if gpars['plot_wave_units'] == 'nm':
+            wave = self.wavelength_solutions[:, iter_num] / 10
+        elif gpars['plot_wave_units'] == 'microns':
+            wave = self.wavelength_solutions[:, iter_num] / 1E4
+        else:
+            # Assumed to be angstroms
+            wave = self.wavelength_solutions[:, iter_num]
+        
+        # The best fit forward model for this iteration
+        model = self.models[:, iter_num]
+        
+        # The residuals for this iteration
+        residuals = self.residuals[:, iter_num]
+        
+        # The filename for the plot
+        fname = gpars['run_output_path'] + 'Order' + str(self.order_num+1) + os.sep + 'Fits' + os.sep + gpars['full_tag'] + '_data_model_spec' + str(self.spec_num+1) + '_ord' + str(self.order_num+1) + '_iter' + str(iter_num+gpars['di']) + '.png'
+            
+        # Define some helpful indices
+        f, l = gpars['crop_pix'][0], gpars['n_data_pix'] - gpars['crop_pix'][1]
+        good = np.where(self.data.badpix == 1)[0]
+        bad = np.where(self.data.badpix == 0)[0]
+        bad_data_locs = np.argsort(residuals[good])[-1*gpars['flag_n_worst_pixels']:]
+        use_pix = np.arange(good[0], good[-1]).astype(int)
+        
+        # Figure
+        fig, ax = plt.subplots(1, 1, figsize=(gpars['spec_img_w'], gpars['spec_img_h']), dpi=gpars['dpi'])
+        # Data
+        ax.plot(wave[use_pix], self.data.flux[use_pix], color=gpars['colors']['blue'], linewidth=gpars['lw'])
+        # Model
+        ax.plot(wave[use_pix], model[use_pix], color=gpars['colors']['red'], linewidth=gpars['lw'])
+        # Zero line
+        ax.plot(wave[use_pix], np.zeros(wave[use_pix].size), color=gpars['colors']['purple'], linewidth=gpars['lw'], linestyle=':')
+        # Residuals (all bad pixels will be zero here)
+        ax.plot(wave[good], residuals[good], color=gpars['colors']['orange'], linewidth=gpars['lw'])
+        # The worst N pixels that were flagged
+        ax.plot(wave[bad_data_locs], residuals[bad_data_locs], color='darkred', marker='X', linewidth=0)
+        
+        if gpars['verbose_plot']:
+            
+            use = np.where((templates_dict['star'][:, 0] >= wave[f]*1E4) & (templates_dict['star'][:, 0] <= wave[l]*1E4))[0]
+            
+            pars = self.best_fit_pars[iter_num]
+            lsf = self.models_dict['lsf'].build(pars=pars)
+            
+            # Extra zero line
+            plt.plot(wave[use_pix], np.zeros(wave[use_pix].size)-0.1, color=gpars['colors']['purple'], linewidth=gpars['lw'], linestyle=':', alpha=0.8)
+            
+            # Gas Cell
+            if 'gas_cell' in self.models_dict:
+                gas = self.models_dict['gas_cell'].build(pars, templates_dict['gas_cell'][:, 0], templates_dict['gas_cell'][:, 1], templates_dict['star'][:, 0])
+                gas_cell_convolved = self.models_dict['lsf'].convolve_flux(gas, lsf=lsf)
+                ax.plot(templates_dict['star'][use, 0] / 1E4, gas_cell_convolved[use] - 1.1, label='Gas Cell', linewidth=gpars['lw'], color='green', alpha=0.8)
+            
+            # Star
+            star = self.models_dict['star'].build(pars, templates_dict['star'][:, 0], templates_dict['star'][:, 1], templates_dict['star'][:, 0])
+            star_convolved = self.models_dict['lsf'].convolve_flux(star, lsf=lsf)
+            ax.plot(templates_dict['star'][use, 0] / 1E4, star_convolved[use] - 1.1, label='Star', linewidth=gpars['lw'], color='deeppink', alpha=0.6)
+            
+            # Tellurics
+            tellurics = self.models_dict['tellurics'].build(pars, templates_dict['tellurics'], templates_dict['star'][:, 0])
+            tellurics_convolved = self.models_dict['lsf'].convolve_flux(tellurics, lsf=lsf)
+            plt.plot(templates_dict['star'][use, 0] / 1E4, tellurics_convolved[use] - 1.1, label='Tellurics', linewidth=gpars['lw'], color='indigo', alpha=0.8)
+
+            plt.xlim(wave[f] - 5E-4, wave[l] + 15E-4)
+            plt.ylim(-1.1, 1.08)
+            plt.legend(loc='lower right')
+        else:
+            plt.xlim(wave[f] - 5E-4, wave[l] + 5E-4)
+            plt.ylim(-0.2, 1.08)
+
+        plt.xlim(wave[f] - 5E-4, wave[l] + 5E-4)
+        plt.xlabel('Wavelength [Microns]', fontsize=6)
+        plt.ylabel('Data, Model, Residuals', fontsize=6)
+        plt.tight_layout()
+        plt.savefig(fname)
+        plt.close()
+        
+        if save:
+            fig.save(fname)
+        else:
+            return fig, ax
 
 
 class iSHELLForwardModel(ForwardModel):
@@ -194,30 +280,32 @@ class iSHELLForwardModel(ForwardModel):
         return raw_flux_pre_conv, blaze, lsf
 
     def plot(self, iter_num, templates_dict, gpars):
+        
+        super().plot(iter_num, templates_dict, gpars, save=True)
 
         # Extract the low res wave grid, model, and residuals
-        wave = self.wavelength_solutions[:, iter_num] / 1E4
-        model = self.models[:, iter_num]
-        residuals = self.residuals[:, iter_num]
-        fname = gpars['run_output_path'] + 'Order' + str(self.order_num+1) + os.sep + 'Fits' + os.sep + gpars['full_tag'] + '_data_model_spec' + str(self.spec_num+1) + '_ord' + str(self.order_num+1) + '_iter' + str(iter_num+gpars['di']) + '.png'
+        #wave = self.wavelength_solutions[:, iter_num] / 1E4
+        #model = self.models[:, iter_num]
+        #residuals = self.residuals[:, iter_num]
+        #fname = gpars['run_output_path'] + 'Order' + str(self.order_num+1) + os.sep + 'Fits' + os.sep + gpars['full_tag'] + '_data_model_spec' + str(self.spec_num+1) + '_ord' + str(self.order_num+1) + '_iter' + str(iter_num+gpars['di']) + '.png'
             
         # Define some helpful indices
-        f, l = gpars['crop_pix'][0], gpars['n_data_pix'] - gpars['crop_pix'][1]
-        good = np.where(self.data.badpix == 1)[0]
-        bad = np.where(self.data.badpix == 0)[0]
-        bad_data_locs = np.where((bad > f) & (bad < l))[0]
+        #f, l = gpars['crop_pix'][0], gpars['n_data_pix'] - gpars['crop_pix'][1]
+        #good = np.where(self.data.badpix == 1)[0]
+        #bad = np.where(self.data.badpix == 0)[0]
+        #bad_data_locs = np.where((bad > f) & (bad < l))[0]
         use_pix = np.arange(good[0], good[-1]).astype(int)
         
         # Figure
-        plt.figure(num=1, figsize=(gpars['spec_img_w'], gpars['spec_img_h']), dpi=gpars['dpi'])
+        #plt.figure(num=1, figsize=(gpars['spec_img_w'], gpars['spec_img_h']), dpi=gpars['dpi'])
         # Data
-        plt.plot(wave[use_pix], self.data.flux[use_pix], color=gpars['colors']['blue'], linewidth=gpars['lw'])
+        #plt.plot(wave[use_pix], self.data.flux[use_pix], color=gpars['colors']['blue'], linewidth=gpars['lw'])
         # Model
-        plt.plot(wave[use_pix], model[use_pix], color=gpars['colors']['red'], linewidth=gpars['lw'])
+        #plt.plot(wave[use_pix], model[use_pix], color=gpars['colors']['red'], linewidth=gpars['lw'])
         # Zero line
-        plt.plot(wave[use_pix], np.zeros(wave[use_pix].size), color=gpars['colors']['purple'], linewidth=gpars['lw'])
+        #plt.plot(wave[use_pix], np.zeros(wave[use_pix].size), color=gpars['colors']['purple'], linewidth=gpars['lw'])
         # Residuals (all bad pixels will be zero here)
-        plt.plot(wave[good], residuals[good], color=gpars['colors']['orange'], linewidth=gpars['lw'])
+        #plt.plot(wave[good], residuals[good], color=gpars['colors']['orange'], linewidth=gpars['lw'])
         
         if gpars['verbose']:
             
@@ -264,7 +352,7 @@ class iSHELLForwardModel(ForwardModel):
     
     # Estimate the best stellar shift via pseudo cross correlation through RMS minimization
     # Since the stellar shift is all that's varied, and it's brute force, it's mathematically identical to cc.
-    def cross_correlate(self, templates_dict, iter_num, gpars, update_from):
+    def cross_correlate(self, templates_dict, iter_num, gpars):
         
         print('Cross-Correlating Spectrum ' + str(self.spec_num + 1) + ' of ' + str(gpars['n_spec']), flush=True)
 

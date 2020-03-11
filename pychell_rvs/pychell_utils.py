@@ -3,6 +3,22 @@ import operator
 import numpy as np
 import pychell_rvs.pychell_math as pcmath
 from pdb import set_trace as stop
+import time
+
+class StopWatch:
+    
+    def __init__(self, seed):
+        self.seed = time.time()
+        self.laps = {'seed': self.seed}
+        
+    def time_since(self, name=None):
+        if name is None:
+            name = 
+        return self.laps[name] - time.time()
+    
+    def lap(self, name=None):
+        if name is None:
+            self.laps['lap_' + str(len(self.laps) + 1)] = time.time()
 
 def sort_data(data_list, gpars):
     bjds_temp = np.array([getattr(data_list[ispec], 'BJD') for ispec in range(gpars['n_spec'])]).astype(np.float64)

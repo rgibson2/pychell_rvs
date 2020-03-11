@@ -5,11 +5,41 @@ Extracts radial-velocities from reduced 1-dimensional echelle spectra by forward
 from the directory this file is in, install pychell_rvs with
 pip install .
 
-The code is generalized to support any instrument, but before doing so at least two classes need to be implemented:
-Until better documentation exists, also see the iSHELL, CHIRON,or PARVI implementations for examples.
-All abstract methods existing for these classes must be implemnented for a given instrument.
+The code is generalized to support any instrument, but before doing so at least two abstarct classes need to be implemented:
 1. SpecData
+
+This class contains information on how to handle the data for a given instrument. Each single order observation will correspond to a unique instance of the implemented class. These implementations of the abstract class all must belong in pychell_data.py. The __init__ function will by default take in the arguments
+input_file : The name of the file to be read in for this observation. Discussed later on (str).
+order_num : The image order number, starting at 0 (int).
+spec_num : The spectrum number, starting at 0 (int).
+gpars : a helpful dictionary containing pipeline wide general parameters. See below. (dict)
+
+The implemented __init__ method should call the parant class init method through:
+
+```
+super().__init__(input_file, order_num, spec_num, gpars)
+```
+
+Checking the abstract class __init__ method, we see this stores the input_file, order_num, and spec_num. Then it calls the parse method. This abstract method needs to implemented by the user. This method only takes the gpars dictionary as input. The parse method must define the following class members for this order:
+
+flux : The normalized flux for this observation. Unused ("bad") pixels must be converted to nans. (np.ndarray)
+badpix : A bad pix array of ones and zeros. If not known, just set to all ones. Cropped pixels are still handled below. (np.ndarray).
+BJD : The bary-centric julian date. If known a priori, set from the gpars key BJDS. Otherwise, one can call get_BC_vel if the JD UTC is known. (float)
+bary_corr : The bary-center RV correction. If known a priori, set from the gpars key bary_corrs. Otherwise, one can call JDUTC_to_BJDTDB if the JD UTC is known. (float)
+See https://github.com/shbhuk/barycorrpy for more information on these last two members.
+obs_details : a dictionary containing any other remaining parameters for this observation one wants to "remember". This dict is stored in the outputs. (dict)
+
+OPTIONAL:
+If the wavelength solution is known a priori, even if it's just a "starting wavelength", it should be defined using the 'wave_grid' member. This will correspond to the flux array.
+
+If the LSF for this observation and this order is known, it must be defined using the 'lsf' member. Since LSFs can be tricky and aren't used outside of the fitting, this can be anything that captures the LSF for this order. For example, if the LSF is known a priori from say a laser frequency comb, this member will contain that info. The implementation of the custom LSF for this instrument must know how to work with this variable, which the user can define (see custom model components later).
+
+Finally, the parse method forces cropped pixels to be zero. That's it for this class!
+
 2. ForwardModel
+
+This class contains more general information necessary to build the forward model for this instrument.
+
 
 A file in the "spectrographs" folder must be created with two dictionaries:
 1. default_instrument_parameters
@@ -17,13 +47,46 @@ A file in the "spectrographs" folder must be created with two dictionaries:
 
 The default_instrument_parameters dictionary contains any instrument dependent parameters. It must define:
 1. spectrograph: the name of the spectrograph. Can be anything. (str)
-2. observatory: The name of the the observatory. This must be recognized by astropy if not supplying own barycenter vels (str)
+2. observatory: The name of the the observatory. This must be recognized by astropy (EarthLocations) if not supplying own barycenter vels (str)
 3. n_orders: the total number of possible orders (int)
 4. n_data_pix: the number of data pixels present in the data (int)
 
-It can define anything else helpful for this instrument used in the instrument specific forward model, model component, or data objects.
+It can also define anything else helpful for this instrument used in the instrument specific forward model, model component, or data objects. Otherwise, the following optional keywords are available to overwrite:
 
-Each instrument must also define a dictionary called default_model_blueprints. This dictionary contains the blueprints to construct the forward model. Some keys in this dictionary are special. It must contain a 'star', 'lsf', and 'wavelength_solution'. Each item is then a dictionary which contains helpful info to construct that model component. Each model component must be tied to a class which implements/extends the SpectralComponent abstract class. An example entry is below:
+n_template_fits : The number of iteration a stellar template is fit to the data. A zeroth iteration does not count towards this number. If you only want a single run with a flat stellar template, set to zero and don't pass a stellar template input file. (int). Default: 10
+
+do_xcorr : Whether or not a cross correlation analysis is performed after the fit. This takes time, but provides the bisector span of the ccf function which can be useful (bool). Default: False
+
+model_resolution : The resolution of the model. It's important this is greater than 1 to ensure the convolution with the LSF is accurate. n_model_pix = n_data_pix * model_resolution. (int) Default: 8
+
+flag_n_worst_pixels : The number of worst pixels to flag in the forward model (after weights are applied) (int). Default: 20
+
+verbose_plot : Whether or not to add templates to the plots. (bool) Default: False
+
+verbsoe_print : Whether or not to print the optimization results after each fit. (bool) Default: False
+
+crop_pix : The number of data pix that are cropped on each side of the spectrum. The badpix array is updated to reflect these values. list; [left_most_pix, n_data_pix - right_most_pix] Default: [50, 50]
+
+dpi : The dpi used for making plots (int). Default: 200
+
+plot_wave_unit : The wavelength units in plots (str). Option are 'nm', 'ang', 'microns'. Default: 'nm'
+
+lw: The linewidth in fits (float) Default: 0.8
+
+spec_img_width_pix : The width in pixels of the fits (int). Default: 2000
+
+spec_img_height_pix: The height in pixels of the fits (int). Default: 720
+
+rv_img_width_pix : The width in pixels of the rv plots (int). Default: 1800
+
+rv_img_height_pix: The height in pixels of the rv plots (int). Default: 600
+
+
+target_function : The optimization function that minimizes some helpful quantity to fit the spectra. Custom optimization functions are still a work in progress! As of now, only the basic unweighted RMS is implemented.
+
+That's it for the default_instrument_parameters dictionary.
+
+Each instrument must also define a dictionary called default_model_blueprints. This dictionary contains the blueprints to construct the forward model. Some keys in this dictionary are special. It must contain a 'star' and 'wavelength_solution'. Each item is then a dictionary which contains helpful info to construct that model component. Each model component must be tied to a class which implements/extends the SpectralComponent abstract class in pychell_model_components.py. An example entry for a star:
 
 ```
 'star': {
@@ -35,12 +98,63 @@ Each instrument must also define a dictionary called default_model_blueprints. T
 ```
 
 The name can be anything. The class_name must point to the class and live in the file pychell_rvs_spectral_components.py.
-The input_file is the full path+filename to the stellar template file used. If None, things will start from a flat template.
-The 'vel' key is the initial conditions for the stellar doppler shift parameter. These classes can have any remaining keywords that inform the model. When each class is initialized, it is given the above dictionary and the order number.
+The input_file is the full path+filename to the stellar template file used. If None, things will start from a flat template. 
+The 'vel' item is [lower_bound, guess, upper_bound] for the stellar doppler shift parameter. These can have any remaining keywords that inform the model. When each class is initialized, it is given the above "blueprint" sub dictionary, the gpars dictionary, and the order number. The corresponding class for this model is StarModel.
 
-Example Run For Barnard's Star (GJ 699) for iSHELL:
+Below is an example of a model component unique to iSHELL, and provides an idea of how to implement other custom model components.
 
-Within a file called gj699.py:
+The entry in default_model_blueprints:
+
+```
+'fringing_first_pass': {
+    'name': 'fringing_first_pass',
+    'class_name': 'BasicFringingModel',
+    'd': [183900000.0, 183911000.0, 183930000.0],
+    'fin': [0.01, 0.04, 0.08],
+    'n_delay': 0
+}
+```
+
+This will model one of the fringing components present in iSHELL spectra. It has parameters 'd' and 'fin'. The corresponding class is:
+
+```
+class BasicFringingModel(SpectralComponent):
+    
+    def __init__(self, order_num, blueprint, gpars):
+        self.enabled = True
+        self.base_par_names = ['_d', '_fin']
+        self.name = blueprint['name']
+        self.n_delay = blueprint['n_delay']
+        self.par_names = [self.name + s for s in self.base_par_names]
+    
+    def build(self, pars, wave_final):
+        if self.enabled:
+            d = pars[self.par_names[0]].value
+            fin = pars[self.par_names[1]].value
+            theta = (2 * np.pi / wave_final) * d
+            fringing = 1 / (1 + fin * np.sin(theta / 2)**2)
+            return fringing
+        else:
+            return self.build_fake(wave_final.size)
+    
+    def build_fake(self, n):
+        return np.ones(n, dtype=float)
+    
+    def initialize_parameters(self, blueprint, gpars):
+        pars = []
+        pars.append(Parameter(name=self.par_names[0], value=blueprint['d'][1], minv=blueprint['d'][0], maxv=blueprint['d'][2], mcmcscale=0.1))
+        pars.append(Parameter(name=self.par_names[1], value=blueprint['fin'][1], minv=blueprint['fin'][0], maxv=blueprint['fin'][2], mcmcscale=0.1))
+        return pars
+    
+    def modify(self, v):
+        self.enabled = v
+        
+    def __repr__(self):
+        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
+```
+
+To run the code, a python config script must be created. This file must contain two dictionaries:
+1. 
 
 ```
 import pychell_rvs.pychell_rvs as pychell_rvs

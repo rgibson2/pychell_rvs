@@ -17,8 +17,7 @@ import numba
 
 # Astropy
 from astropy.time import Time
-#from astropy.coordinates import EarthLocation
-#EarthLocation._get_site_registry(force_download=True)
+from astropy.io import fits
 
 # User defined/pip modules
 import pychell_rvs.pychell_math as pcmath # mathy equations
@@ -33,10 +32,14 @@ class SpecData(ABC):
         self.spec_num = spec_num
         
         # Parse the observation details for this order (probably order independent)
-        self.parse(order_num, spec_num, gpars)
+        self.parse(gpars)
+        
+        # Force bad cropped pix to be zero just in case
+        self.badpix[0:gpars['crop_pix'][0]] = 0
+        self.badpix[-gpars['crop_pix'][1]:] = 0
         
     @abstractmethod
-    def parse(self, order_num, spec_num, gpars):
+    def parse(self, gpars):
         pass
 
 class SpecDataCHIRON(SpecData):
@@ -45,10 +48,10 @@ class SpecDataCHIRON(SpecData):
         
         super().__init__(input_file, order_num, spec_num, gpars)
         
-    def parse(self, order_num, spec_num, gpars):
+    def parse(self, gpars):
         
         # Load the flux, flux unc, and bad pix arrays
-        fname = glob.glob(gpars['data_input_path'] + self.input_file[:-4] + '_ord' + str(order_num+1) + '.npz')[0]
+        fname = glob.glob(gpars['data_input_path'] + self.input_file[:-4] + '_ord' + str(self.order_num+1) + '.npz')[0]
         data_ = np.load(fname, allow_pickle=True)
         self.wave_grid, self.flux = data_['wave'], data_['flux']
         self.flux /= pcmath.weighted_median(self.flux, med_val=0.98)
@@ -56,10 +59,6 @@ class SpecDataCHIRON(SpecData):
         # For CHIRON, generate a dumby uncertainty grid and a bad pix array that will be updated or used
         self.flux_unc = np.zeros(gpars['n_data_pix'], dtype=np.float64) + 1E-3
         self.badpix = np.ones(gpars['n_data_pix'], dtype=np.float64)
-        
-        # Force bad cropped pix to be zero just in cases
-        self.badpix[0:gpars['crop_pix'][0]] = 0
-        self.badpix[-gpars['crop_pix'][1]:] = 0
         
         # Observation Details, silly indexing for a zero dimensional array
         # obs_details is kept in memory and saved later for sanity.
@@ -86,10 +85,10 @@ class SpecDataiSHELL(SpecData):
         # Call the super class
         super().__init__(input_file, order_num, spec_num, gpars)
         
-    def parse(self, order_num, spec_num, gpars):
+    def parse(self, gpars):
         
         # Load the flux, flux unc, and bad pix arrays
-        fname = glob.glob(gpars['data_input_path'] + self.input_file[:-5] + '*_obj_*' + 'ord' + str(order_num+1) + '_spectrum.npz')[0]
+        fname = glob.glob(gpars['data_input_path'] + self.input_file[:-5] + '*_obj_*' + 'ord' + str(self.order_num+1) + '_spectrum.npz')[0]
         data_ = np.load(fname, allow_pickle=True)
         self.flux, self.flux_unc, self.badpix = data_['flux'], data_['flux_unc'], data_['badpix']
         
@@ -124,12 +123,11 @@ class SpecDataPARVI(SpecData):
         
         super().__init__(input_file, order_num, spec_num, gpars)
         
-    def parse(self, order_num, spec_num, gpars):
+    def parse(self, gpars):
         
         # NOTE: TEMP lists for testing, fix when order IDs are sorted out.
         order_nums_for_files = ['-5', '-4', '-3', '-2', '+2', '+3', '+4']
-        jds = [2458805.93823, 2458805.94502, 2458805.95366, 2458806.91081, 2458806.92171, 2458806.92855, 2458806.93674, 2458806.95046, 2458859.81056, 2458859.81514, 2458859.81971, 2458859.82434]
-        self.JD = jds[spec_num]
+        self.JD = jds[self.spec_num]
         self.obs_details = {}
         
         # Load the flux, flux unc, and bad pix arrays. Also load the known wavelength grid for a starting point
