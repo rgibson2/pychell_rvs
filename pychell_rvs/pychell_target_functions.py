@@ -28,12 +28,7 @@ import scipy.interpolate # Cubic interpolation, Akima interpolation
 from numba import njit, jit, prange
 
 # User defined/pip modules
-import pychell_rvs.pychell_math as pcmath # mathy equations
-import pychell_rvs.pychell_forward_models as pcforwardmodels # the various forward model implementations
-import pychell_rvs.pychell_data as pcdata # the data objects
 import pychell_rvs.pychell_model_components as pcmodelcomponents # the data objects
-import pychell_rvs.pychell_solver as pcsolver # nelder mead solver
-import pychell_rvs.pychell_utils as pcutils # random helpful functions
 
 def rms_model(gp, v, fwm, iter_num, templates_dict, gpars, weights=None):
 
