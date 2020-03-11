@@ -51,9 +51,12 @@ class SpecDataCHIRON(SpecData):
     def parse(self, gpars):
         
         # Load the flux, flux unc, and bad pix arrays
-        fname = glob.glob(gpars['data_input_path'] + self.input_file[:-4] + '_ord' + str(self.order_num+1) + '.npz')[0]
-        data_ = np.load(fname, allow_pickle=True)
-        self.wave_grid, self.flux = data_['wave'], data_['flux']
+        #fname = glob.glob(gpars['data_input_path'] + self.input_file[:-4] + '_ord' + str(self.order_num+1) + '.npz')[0]
+        #data_ = np.load(fname, allow_pickle=True)
+        fits_data = fits.open(gpars['data_input_path'] + self.input_file)[0]
+        fits_data.verify('fix')
+        
+        self.wave_grid, self.flux = fits_data.data[self.order_num, :, 0].astype(np.float64), fits_data.data[self.order_num, :, 1].astype(np.float64)
         self.flux /= pcmath.weighted_median(self.flux, med_val=0.98)
         
         # For CHIRON, generate a dumby uncertainty grid and a bad pix array that will be updated or used
@@ -62,7 +65,7 @@ class SpecDataCHIRON(SpecData):
         
         # Observation Details, silly indexing for a zero dimensional array
         # obs_details is kept in memory and saved later for sanity.
-        self.obs_details = data_['obs_details'][()]
+        self.obs_details = dict(fits_data.header)
         
         # Extract specific keys from the observation details used in the code.
         # NOTE: Figure out where exp meter info is.
@@ -88,22 +91,20 @@ class SpecDataiSHELL(SpecData):
     def parse(self, gpars):
         
         # Load the flux, flux unc, and bad pix arrays
-        fname = glob.glob(gpars['data_input_path'] + self.input_file[:-5] + '*_obj_*' + 'ord' + str(self.order_num+1) + '_spectrum.npz')[0]
-        data_ = np.load(fname, allow_pickle=True)
-        self.flux, self.flux_unc, self.badpix = data_['flux'], data_['flux_unc'], data_['badpix']
+        
+        fits_data = fits.open(gpars['data_input_path'] + self.input_file)[0]
+        fits_data.verify('fix')
+        
+        self.flux, self.flux_unc, self.badpix = fits_data.data[self.order_num, :, 0].astype(np.float64), fits_data.data[self.order_num, :, 1].astype(np.float64), fits_data.data[self.order_num, :, 2].astype(np.float64)
         
         # Flip the data so wavelength is increasing
         self.flux = self.flux[::-1]
         self.badpix = self.badpix[::-1]
         self.flux_unc = self.flux_unc[::-1]
         
-        # Force bad cropped pix to be zero just in cases
-        self.badpix[0:gpars['crop_pix'][0]] = 0
-        self.badpix[-gpars['crop_pix'][1]:] = 0
-        
         # Observation Details, silly indexing for a zero dimensional array
         # obs_details is kept in memory and saved later for sanity.
-        self.obs_details = data_['obs_details'][()]
+        self.obs_details = dict(fits_data.header)
         
         # Extract specific keys from the observation details used in the code.
         self.SNR = float(self.obs_details['SNR'])

@@ -19,7 +19,6 @@ import numba
 import pychell_rvs.pychell_math as pcmath
 import pychell_rvs.pychell_solver as pcsolver # nelder mead solver
 
-
 class SpectralComponent(ABC):
     
     @abstractmethod

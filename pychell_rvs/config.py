@@ -13,7 +13,7 @@ default_templates_path = pipeline_path + 'defualt_templates' + os.sep
 default_config = {
     
     # Supported Instruments
-    'supported_instruments': ['iSHELL', 'CHIRON', 'NIRSPEC', 'PARVI'],
+    'supported_instruments': ['iSHELL', 'CHIRON', 'PARVI'],
     
     # Star Settings
     'n_template_fits': 10, # a zeroth iteration (flat template) does not count towards this number.
@@ -26,7 +26,12 @@ default_config = {
     # This is only important because of the instrument line profile (LSF)
     # In theory 8 is sufficient for any instrument. Some are probably fine at 4.
     'model_resolution': 8,
-    'bary_corr_file': None,
+    
+    # The target function. Must live in pychell_target_functions.py
+    'target_function': 'rms_model',
+    
+    # Flags the N worst pixels in fitting
+    'flag_n_worst_pixels': 20,
     
     # If True, the best fit parameters are printed after each iteration
     'verbose_plot': True,
@@ -37,7 +42,7 @@ default_config = {
     
     # Plotting parameters
     'dpi': 200, # the dpi used in plots
-    'wave_units': 'nm', # possible options are 'nm', 'angstroms', 'microns'
+    'plot_wave_unit': 'nm', # The units for plots. Options are nm, ang, microns
     'lw': 0.8, # linewidth on fits
     'spec_img_width_pix': 2000, # in pixels
     'spec_img_height_pix': 720, # in pixels

@@ -7,23 +7,21 @@ import time
 
 class StopWatch:
     
-    def __init__(self, seed):
+    def __init__(self):
         self.seed = time.time()
         self.laps = {'seed': self.seed}
         
     def time_since(self, name=None):
         if name is None:
-            name = 
-        return self.laps[name] - time.time()
+            name = 'seed'
+        return time.time() - self.laps[name]
     
-    def lap(self, name=None):
-        if name is None:
-            self.laps['lap_' + str(len(self.laps) + 1)] = time.time()
-
-def sort_data(data_list, gpars):
-    bjds_temp = np.array([getattr(data_list[ispec], 'BJD') for ispec in range(gpars['n_spec'])]).astype(np.float64)
-    sorting_inds = np.argsort(bjds_temp)
-    return sorting_inds
+    def reset(self):
+        self.seed = time.time()
+        self.laps = {'seed': self.seed}
+    
+    def lap(self, name):
+        self.laps[name] = time.time()
     
 
 def find_all_items(obj, key, keys=None):
