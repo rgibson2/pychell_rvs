@@ -589,9 +589,6 @@ def init_pipeline(user_input_options, user_model_blueprints):
         global_pars['BJDS'] = np.array([getattr(data_all_first_order[ispec], 'BJD') for ispec in range(global_pars['n_spec'])]).astype(np.float64)
         global_pars['bary_corrs'] = np.array([getattr(data_all_first_order[ispec], 'bary_corr') for ispec in range(global_pars['n_spec'])]).astype(np.float64)
     
-    # get the BJDS and barycorrs from the now sorted data.
-    np.savetxt('bary_corrs_toi461.txt', np.array([global_pars['BJDS'], global_pars['bary_corrs']]).T, delimiter=',')
-    
     # Sort by BJD
     # Resort the filenames as well so we only have to do this once.
     global_pars['sorting_inds'] = np.argsort(global_pars['BJDS'])
