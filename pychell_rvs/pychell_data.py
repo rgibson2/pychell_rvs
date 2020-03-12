@@ -3,8 +3,8 @@ from collections import OrderedDict
 from abc import ABC, abstractmethod # Abstract classes
 import glob # File searching
 import sys # sys utils
-#from barycorrpy import get_BC_vel # BC velocity correction
-#from barycorrpy.utc_tdb import JDUTC_to_BJDTDB
+from barycorrpy import get_BC_vel # BC velocity correction
+from barycorrpy.utc_tdb import JDUTC_to_BJDTDB
 import pdb # debugging
 stop = pdb.set_trace
 
@@ -80,7 +80,7 @@ class SpecDataCHIRON(SpecData):
             self.bary_corr = gpars['bary_corrs'][self.spec_num]
             self.BJD = gpars['BJDS'][self.spec_num]
 
-# Keep data in memory
+
 class SpecDataiSHELL(SpecData):
 
     def __init__(self, input_file, order_num, spec_num, gpars):
@@ -127,13 +127,11 @@ class SpecDataPARVI(SpecData):
     def parse(self, gpars):
         
         # NOTE: TEMP lists for testing, fix when order IDs are sorted out.
-        order_nums_for_files = ['-5', '-4', '-3', '-2', '+2', '+3', '+4']
-        self.JD = jds[self.spec_num]
         self.obs_details = {}
         
         # Load the flux, flux unc, and bad pix arrays. Also load the known wavelength grid for a starting point
-        fname = glob.glob(gpars['data_input_path'] + self.input_file[:-4] + '_order' + order_nums_for_files[order_num] + '.txt')[0]
-        self.wave_grid, self.flux, self.flux_unc = np.loadtxt(fname, comments='#', delimiter=',', unpack=True, usecols=(0, 5, 6))
+        fits_data = fits.open(gpars['data_input_path'] + self.input_file)[0]
+        self.wave_grid, self.flux, self.flux_unc = fits_data.data[self.order_num, :, 0].astype(np.float64), fits_data.data[self.order_num, :, 5].astype(np.float64), fits_data.data[self.order_num, :, 6].astype(np.float64)
         
         # Normalize
         continuum = pcmath.weighted_median(self.flux, med_val=0.98)
@@ -148,9 +146,12 @@ class SpecDataPARVI(SpecData):
         # Convert wavelength grid to Angstroms
         self.wave_grid *= 10
         
+        self.JD = float(fits_data.header['JD'])
+        
         if gpars['bary_corr_file'] is None and gpars['bary_corrs'] is None:
             self.bary_corr = get_BC_vel(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
             self.BJD = JDUTC_to_BJDTDB(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
         else:
             self.bary_corr = gpars['bary_corrs'][self.spec_num]
             self.BJD = gpars['BJDS'][self.spec_num]
+        

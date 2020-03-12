@@ -94,7 +94,7 @@ default_model_blueprints = {
         'n_splines': 0,
         'base_quad': [-5.5E-5, -2E-6, 5.5E-5],
         'base_lin': [-0.001, 1E-5, 0.001],
-        'base_zero': [0.96, 1.0, 1.08],
+        'base_zero': [0.96, 1.0, 1.15],
         'spline': [-0.025, 0.001, 0.025],
         
         # Blaze is centered on the blaze wavelength.
@@ -109,7 +109,7 @@ default_model_blueprints = {
         'hermdeg': 4,
         'compress': 64,
         'width': [0.15, 0.21, 0.28], # LSF width, in angstroms (slightly larger than this for PARVI)
-        'ak': [-0.01, 0.001, 0.05] # See cale et al 2019 or arfken et al some year for definition of ak > 0
+        'ak': [-0.075, 0.001, 0.075] # See cale et al 2019 or arfken et al some year for definition of ak > 0
     },
     
     # Frequency comb (no splines since no gas cell)

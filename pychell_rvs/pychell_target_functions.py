@@ -73,26 +73,13 @@ def weighted_rms_model(gp, v, fwm, iter_num, templates_dict, gpars):
     # Generate the forward model
     wave_lr, model_lr = fwm.build_full(gp_, templates_dict, gpars)
     
-    # Build weights
-    if gp_[fwm.models_dict['star'].par_names[0]].vary and np.sum(v) < 3:
-        star_flux = fwm.models_dict['star'].build(gp_, templates_dict['star'][:, 0], templates_dict['star'][:, 1], wave_lr)
-        weights = pcmath.rv_content_per_pixel(wave_lr, star_flux, snr=100, use_blaze=False)
-        bad = np.where(~np.isfinite(weights))[0]
-        if bad.size > 0:
-            weights[bad] = 0
-        weights *= fwm.data.badpix
-    else:
-        weights = np.copy(fwm.data.badpix)
-        
-        
-
-    # Force weights to contain bad pixels
-    weights = np.copy(fwm.data.badpix)
+    # Build weights from flux uncertainty
+    weights = (fwm.data.flux_unc * fwm.data.badpix)**2
 
     # weighted RMS
-    wdiffs2 = (fwm.data.flux - model_lr)**2
-    good = np.where(np.isfinite(diffs2) & (weights > 0))[0]
-    wresiduals2 = diffs2[good]
+    wdiffs2 = (fwm.data.flux - model_lr)**2 * weights
+    good = np.where(np.isfinite(wdiffs2) & (weights > 0))[0]
+    wresiduals2 = wdiffs2[good]
     weights = weights[good]
 
     # Taper the ends
@@ -107,8 +94,8 @@ def weighted_rms_model(gp, v, fwm, iter_num, templates_dict, gpars):
     weights[ss[-1*gpars['flag_n_worst_pixels']:]] = 0
     wresiduals2[ss[-1*gpars['flag_n_worst_pixels']:]] = np.nan
     
-    # Compute rms ignoring bad pixels
-    wrms = (np.nansum(residuals2 * weights) / np.nansum(weights))**0.5
+    # Compute weighted rms
+    wrms = (np.nansum(wresiduals2) / np.nansum(weights))**0.5
     cons = np.nanmin(fwm.models_dict['lsf'].build(gp_)) # Ensure LSF is greater than zero
 
     # Return rms and constraint
