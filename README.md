@@ -41,7 +41,7 @@ Finally, the parse method forces cropped pixels to be zero. That's it for this c
 This class contains more general information necessary to build the forward model for this instrument.
 
 
-A file in the "spectrographs" folder must be created with two dictionaries:
+A file in the "spectrographs" folder called parameters_insname.py must be created with the following two dictionaries. insname must further be all lowercase, otherwise identical to the given instrument name.
 1. default_instrument_parameters
 2. default_model_blueprints
 
