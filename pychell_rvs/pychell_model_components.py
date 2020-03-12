@@ -37,6 +37,9 @@ class SpectralComponent(ABC):
     def modify(self, *args, **kwargs):
         pass
     
+    def __repr__(self):
+        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
+    
     
 class GasCellModel(SpectralComponent):
     
@@ -76,9 +79,6 @@ class GasCellModel(SpectralComponent):
         pars.append(Parameter(name=self.par_names[0], value=blueprint['shift'][1], minv=blueprint['shift'][0], maxv=blueprint['shift'][2], mcmcscale=0.1))
         pars.append(Parameter(name=self.par_names[1], value=blueprint['depth'][1], minv=blueprint['depth'][0], maxv=blueprint['depth'][2], mcmcscale=0.001))
         return pars
-        
-    def __repr__(self):
-        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
     
 class GasCellModelOrderDependent(SpectralComponent):
     
@@ -121,16 +121,7 @@ class GasCellModelOrderDependent(SpectralComponent):
         pars.append(Parameter(name=self.par_names[0], value=shift, minv=shift - blueprint['shift_range'][0], maxv=shift + blueprint['shift_range'][1], mcmcscale=0.1))
         pars.append(Parameter(name=self.par_names[1], value=depth[1], minv=depth[0], maxv=depth[2], mcmcscale=0.001))
         return pars
-        
-    def __repr__(self):
-        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'    
     
-    
-    
-    
-    
-    
-
     
 class LSFHermiteModel(SpectralComponent):
     
@@ -184,8 +175,6 @@ class LSFHermiteModel(SpectralComponent):
         delta[int(self.nx / 2)] = 1.0
         return delta
     
-    def __repr__(self):
-        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
 
 class ResidualBlazeModel(SpectralComponent):
     
@@ -229,8 +218,6 @@ class ResidualBlazeModel(SpectralComponent):
                 pars.append(Parameter(name=self.par_names[i+3], value=blueprint['spline'][1], minv=blueprint['spline'][0], maxv=blueprint['spline'][2], mcmcscale=0.001))
         return pars
         
-    def __repr__(self):
-        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
     
 class FullBlazeModel(SpectralComponent):
     
@@ -280,8 +267,6 @@ class FullBlazeModel(SpectralComponent):
     def modify(self, v):
         self.enabled = v
         
-    def __repr__(self):
-        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
         
 # Quadratic + Splines
 class WaveSolModelFull(SpectralComponent):
@@ -330,9 +315,6 @@ class WaveSolModelFull(SpectralComponent):
     
     def modify(self):
         pass
-        
-    def __repr__(self):
-        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
 
 
 # Starts from a known wavelength solution plus spline offset
@@ -377,10 +359,6 @@ class WaveModelKnown(SpectralComponent):
         return pars
     
     
-    def __repr__(self):
-        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
-    
-    
 # Starts from a known wavelength solution plus spline offset
 # For CHIRON, we start with the ThAr wls and add splines since we have a gas cell.
 # For PARVI, we are provided the exact wls (so no splines)
@@ -417,9 +395,6 @@ class LSFModelKnown(SpectralComponent):
     
     def initialize_parameters(self, blueprint, gpars):
         return []
-    
-    def __repr__(self):
-        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
         
 class StarModel(SpectralComponent):
     
@@ -464,9 +439,6 @@ class StarModel(SpectralComponent):
     
     def modify(self, v):
         self.enabled = v
-        
-    def __repr__(self):
-        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
         
 class TelluricModelTAPAS(SpectralComponent):
     
@@ -578,9 +550,6 @@ class BasicFringingModel(SpectralComponent):
     def modify(self, v):
         self.enabled = v
         
-    def __repr__(self):
-        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
-        
     
 class ComplexFringingModel(SpectralComponent):
     
@@ -638,9 +607,6 @@ class ComplexFringingModel(SpectralComponent):
         pars.append(Parameter(name=self.par_names[3], value=blueprint['phase'][1], minv=blueprint['phase'][0], maxv=blueprint['phase'][2], mcmcscale=0.1))
         pars.append(Parameter(name=self.par_names[4], value=blueprint['tilt'][1], minv=blueprint['tilt'][0], maxv=blueprint['tilt'][2], mcmcscale=0.1))
         return pars
-        
-    def __repr__(self):
-        return ' Model Name: ' + self.name + ' [Active: ' + str(self.enabled) + ']'
 
 #@jitclass([('name', numba.types.string),
 #           ('value', numba.types.float64),
