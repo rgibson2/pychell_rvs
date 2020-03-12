@@ -575,10 +575,10 @@ def init_pipeline(user_input_options, user_model_blueprints):
     # This is a workaround because astropy does not play well with the ARGO cluster
     global_pars['bary_corrs'] = None
     if global_pars['bary_corr_file'] is not None:
-        global_pars['BJDS'], global_pars['bary_corrs'] = np.loadtxt(global_pars['data_input_path'] + global_pars['bary_corr_file'], delimiter=',', unpack=True)
+        global_pars['BJDS'], global_pars['bary_corrs'] = np.loadtxt(global_pars['data_input_path'] + global_pars['bary_corr_file'], delimiter=',', unpack=True, comments='#')
 
     # Grab some relevant details of the observations that will be the same for all orders
-    global_pars['data_filenames'] = np.atleast_1d(np.genfromtxt(global_pars['data_input_path'] + global_pars['filelist'], dtype='<U100'))
+    global_pars['data_filenames'] = np.atleast_1d(np.genfromtxt(global_pars['data_input_path'] + global_pars['filelist'], dtype='<U100', comments='#'))
     global_pars['n_spec'] = len(global_pars['data_filenames'])
     data_all_first_order = []
     data_class_init = getattr(pcdata, 'SpecData' + global_pars['instrument'])

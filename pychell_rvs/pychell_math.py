@@ -19,7 +19,7 @@ def fmedian(x):
     else:
         return np.nanmedian(x)
 
-def rv_content_per_pixel(wave, flux, snr=100, use_blaze=True):
+def rv_content_per_pixel(wave, flux, snr=100, use_blaze=False):
 
     gain = 1.8
     counts = snr**2

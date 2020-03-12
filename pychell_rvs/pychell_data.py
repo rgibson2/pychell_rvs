@@ -23,7 +23,7 @@ from astropy.io import fits
 import pychell_rvs.pychell_math as pcmath # mathy equations
 
 class SpecData(ABC):
-    
+
     def __init__(self, input_file, order_num, spec_num, gpars):
         
         # Store the input file, spec, and order num

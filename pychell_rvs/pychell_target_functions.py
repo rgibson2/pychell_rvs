@@ -29,6 +29,7 @@ from numba import njit, jit, prange
 
 # User defined/pip modules
 import pychell_rvs.pychell_model_components as pcmodelcomponents # the data objects
+import pychell_rvs.pychell_math as pcmath
 
 def rms_model(gp, v, fwm, iter_num, templates_dict, gpars):
 
@@ -73,7 +74,17 @@ def weighted_rms_model(gp, v, fwm, iter_num, templates_dict, gpars):
     wave_lr, model_lr = fwm.build_full(gp_, templates_dict, gpars)
     
     # Build weights
-    # weights = 
+    if gp_[fwm.models_dict['star'].par_names[0]].vary and np.sum(v) < 3:
+        star_flux = fwm.models_dict['star'].build(gp_, templates_dict['star'][:, 0], templates_dict['star'][:, 1], wave_lr)
+        weights = pcmath.rv_content_per_pixel(wave_lr, star_flux, snr=100, use_blaze=False)
+        bad = np.where(~np.isfinite(weights))[0]
+        if bad.size > 0:
+            weights[bad] = 0
+        weights *= fwm.data.badpix
+    else:
+        weights = np.copy(fwm.data.badpix)
+        
+        
 
     # Force weights to contain bad pixels
     weights = np.copy(fwm.data.badpix)
