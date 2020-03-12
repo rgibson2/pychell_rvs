@@ -471,7 +471,9 @@ def init_pipeline(user_input_options, user_model_blueprints):
     spec = importlib.util.spec_from_file_location('parameters_' + user_input_options['instrument'].lower(), global_pars['pipeline_path'] + 'spectrographs' + os.sep + 'parameters_' + user_input_options['instrument'].lower() + '.py')
     module_ = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module_)
+    # instrument parameters (combine with global_parameters)
     instrument_parameters = module_.default_instrument_parameters
+    # Default blueprints (new dictionary since config.py does not define any default models)
     model_blueprints = module_.default_model_blueprints
     for instrument_key in instrument_parameters:
         sub_keys = pcutils.find_all_items(global_pars, instrument_key)

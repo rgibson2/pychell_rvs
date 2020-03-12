@@ -81,8 +81,7 @@ rv_img_width_pix : The width in pixels of the rv plots (int). Default: 1800
 
 rv_img_height_pix: The height in pixels of the rv plots (int). Default: 600
 
-
-target_function : The optimization function that minimizes some helpful quantity to fit the spectra. Custom optimization functions are still a work in progress! As of now, only the basic unweighted RMS is implemented.
+target_function : The optimization function that minimizes some helpful quantity to fit the spectra. See custom target functions below (str)
 
 That's it for the default_instrument_parameters dictionary.
 
@@ -211,3 +210,23 @@ user_model_blueprints = {
 
 pyshell_rvs.pyshell_rvs_main(user_input_options, user_model_blueprints)
 ```
+
+
+
+
+Custom optimization functions must be placed in the file pychell_target_functions.py. A custom target functions should take as input (gp, v, fwm, iter_num, templates_dict, gpars).
+
+gp : the current parameters as a numpy array. (values only)
+v : a boolean numpy array of which pars in gp are varied.
+fwm : The forward model object for this observation / order
+iter_num : The iteration number (int)
+templates_dict : The templates dictionary.
+gpars : The global parameters dictionary.
+
+This function should first convert the parameters back to Parameter objects through:
+
+```
+gp_objects = pcmodelcomponents.Parameters.from_numpy(list(fwm.initial_parameters.keys()), values=gp, varies=v)
+```
+
+From here, the fwm.build() method can be called and a model returned. The data is accessible through fwm.data. From here, residuals and an effective RMS can be computed. The function must return (rms, cons) where rms is the minimization quantity, and cons is a constraint that must further be greater than zero or the target function is further penalized. For example, the LSF must be greater than zero, so we may wish to set cons=np.min(lsf). Multiple constraints can be included through a cons = np.min([cons1, cons2, ...])

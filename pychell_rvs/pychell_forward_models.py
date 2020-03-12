@@ -234,6 +234,7 @@ class ForwardModels(list):
         print('Cross Correlation Finished in ' + str(round((stopwatch.time_since())/60, 3)) + ' min ', flush=True)
 
         
+    @staticmethod
     def cc_wrapper(forward_model, templates_dict, iter_num, gpars):
         stopwatch = pcutils.StopWatch()
         forward_model.cross_correlate(templates_dict, iter_num, gpars)
@@ -242,6 +243,7 @@ class ForwardModels(list):
 
 
     # Wrapper for parallel processing. Solves and plots the forward model results. Also does xcorr if set.
+    @staticmethod
     def solver_wrapper(forward_model, iter_num, templates_dict, gpars):
 
         stopwatch = pcutils.StopWatch()

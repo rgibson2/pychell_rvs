@@ -30,7 +30,7 @@ from numba import njit, jit, prange
 # User defined/pip modules
 import pychell_rvs.pychell_model_components as pcmodelcomponents # the data objects
 
-def rms_model(gp, v, fwm, iter_num, templates_dict, gpars, weights=None):
+def rms_model(gp, v, fwm, iter_num, templates_dict, gpars):
 
     gp_ = pcmodelcomponents.Parameters.from_numpy(list(fwm.initial_parameters.keys()), values=gp, varies=v)
 
@@ -65,15 +65,18 @@ def rms_model(gp, v, fwm, iter_num, templates_dict, gpars, weights=None):
     return rms, cons
 
 
-def weighted_rms_model(gp, v, fwm, iter_num, templates_dict, gpars, weights):
+def weighted_rms_model(gp, v, fwm, iter_num, templates_dict, gpars):
 
     gp_ = pcmodelcomponents.Parameters.from_numpy(list(fwm.initial_parameters.keys()), values=gp, varies=v)
 
     # Generate the forward model
     wave_lr, model_lr = fwm.build_full(gp_, templates_dict, gpars)
+    
+    # Build weights
+    # weights = 
 
     # Force weights to contain bad pixels
-    weights *= fwm.data.badpix
+    weights = np.copy(fwm.data.badpix)
 
     # weighted RMS
     wdiffs2 = (fwm.data.flux - model_lr)**2
