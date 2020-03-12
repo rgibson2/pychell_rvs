@@ -66,20 +66,20 @@ default_model_blueprints = {
         'vel': [-250, -100, 100],
         'components': {
             'water': {
-                'input_file': default_templates_path + 'telluric_water_tapas.npz',
+                'input_file': default_templates_path + 'telluric_water_tapas_maunakea.npz',
                 'depth': [0.01, 1.5, 4.0],
             },
             'methane': {
-                'input_file': default_templates_path + 'telluric_methane_tapas.npz',
+                'input_file': default_templates_path + 'telluric_methane_tapas_maunakea.npz',
                 'depth': [0.1, 1.0, 3.0],
             },
             'nitrous_oxide': {
-                'input_file': default_templates_path + 'telluric_nitrous_oxide_tapas.npz',
+                'input_file': default_templates_path + 'telluric_nitrous_oxide_tapas_maunakea.npz',
                 'depth': [0.05, 0.65, 3.0],
                 'airmass_correlation': [ 0.225356741957, 1.40889772648] # linear with airmass. called with np.polyval(pars, am)
             },
             'carbon_dioxide': {
-                'input_file': default_templates_path + 'telluric_carbon_dioxide_tapas.npz',
+                'input_file': default_templates_path + 'telluric_carbon_dioxide_tapas_maunakea.npz',
                 'depth': [0.05, 0.65, 3.0],
             }
         }
