@@ -10,9 +10,7 @@ installation
 
 from the directory this file is in, install pychell_rvs with
 
-``
-pip install .
-``
+```pip install .```
 
 This should install the relevant dependencies.
 
