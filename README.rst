@@ -25,7 +25,11 @@ This should install the relevant dependencies.
 Getting Started
 ===============
 
-Below is a quick-start guide which fits 5 nights (30 spectra) of Barnard's Star spectra using spectra from the iSHELL spectrograph.
+Below is a quick-start guide which fits 5 nights (30 spectra) of Barnard's Star spectra using spectra from the iSHELL spectrograph. The wavelength solution and LSF are obtained from a methane gas cell, which are provided in default_templates. Open a terminal in the examples/gj699_ishell/ directory. Run
+
+``python gj699_ishell_example.py.``
+
+
 
 
 
