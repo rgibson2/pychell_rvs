@@ -1,6 +1,6 @@
-===========
+=======================
 pychell_rvs - The tldr;
-===========
+=======================
 
 Extracts radial-velocities from reduced 1-dimensional echelle spectra by forward modeling the full single orders. This code can be adapted to a wide variety of spectrographs. For more information on adapting this code, see link here.
 
@@ -13,6 +13,8 @@ from the directory this file is in, install pychell_rvs with
 ```pip install .```
 
 This should install the relevant dependencies.
+
+
 
 
 A quick start guide which uses data from the iSHELL spectrograph can be found here
