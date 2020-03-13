@@ -2,7 +2,14 @@
 pychell_rvs - The tldr;
 =======================
 
-Extracts radial-velocities from reduced 1-dimensional echelle spectra by forward modeling the full single orders. This code can be adapted to a wide variety of spectrographs. For more information on adapting this code, see link here.
+Extracts radial-velocities from reduced 1-dimensional echelle spectra by forward modeling the full single orders. This code can be adapted to a wide variety of spectrographs. Currently this code supports the following instruments
+
+- iSHELL (0.375" slit, *KGAS* mode, methane gas cell)
+- CHIRON (narrow slit mode, R~136K, iodine cell)
+- PARVI (under development)
+- NIRSPEC (under development)
+
+For more information on adapting this code, see link here.
 
 ============
 installation
@@ -14,10 +21,28 @@ from the directory this file is in, install pychell_rvs with
 
 This should install the relevant dependencies.
 
+===============
+Getting Started
+===============
+
+Below is a quick-start guide which fits 5 nights (30 spectra) of Barnard's Star spectra using spectra from the iSHELL spectrograph.
 
 
 
-A quick start guide which uses data from the iSHELL spectrograph can be found here
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 The code is generalized to support any instrument, but before doing so at least two abstarct classes need to be implemented:
 1. SpecData
