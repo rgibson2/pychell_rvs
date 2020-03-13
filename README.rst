@@ -1,5 +1,5 @@
 ===========
-pychell_rvs; The tldr;
+pychell_rvs - The tldr;
 ===========
 
 Extracts radial-velocities from reduced 1-dimensional echelle spectra by forward modeling the full single orders. This code can be adapted to a wide variety of spectrographs. For more information on adapting this code, see link here.
