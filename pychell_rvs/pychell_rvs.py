@@ -459,15 +459,16 @@ def init_pipeline(user_input_options, user_model_blueprints):
     # First the pipeline path to the dict
     global_pars['pipeline_path'] = os.path.dirname(os.path.realpath(__file__)) + os.sep
     
-    # Load the config file and add to dict. Don't need to be worried about overwriting yet. 
+    # Load the config file and add to dict.
     spec = importlib.util.spec_from_file_location('config', global_pars['pipeline_path'] + 'config.py')
     module_ = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module_)
     config_parameters = module_.default_config
-    for config_key in config_parameters:
-        global_pars[config_key] = config_parameters[config_key]
+    global_pars.update(config_parameters)
+    #for config_key in config_parameters:
+        #global_pars[config_key] = config_parameters[config_key]
     
-    # Load in the default instrument settings and add to dict. Now want to overwrite
+    # Load in the default instrument settings and add to dict.
     spec = importlib.util.spec_from_file_location('parameters_' + user_input_options['instrument'].lower(), global_pars['pipeline_path'] + 'spectrographs' + os.sep + 'parameters_' + user_input_options['instrument'].lower() + '.py')
     module_ = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module_)
@@ -475,31 +476,23 @@ def init_pipeline(user_input_options, user_model_blueprints):
     instrument_parameters = module_.default_instrument_parameters
     # Default blueprints (new dictionary since config.py does not define any default models)
     model_blueprints = module_.default_model_blueprints
-    for instrument_key in instrument_parameters:
-        sub_keys = pcutils.find_all_items(global_pars, instrument_key)
-        if len(sub_keys) == 0:
-            global_pars[instrument_key] = instrument_parameters[instrument_key]
-        else:
-            pcutils.setInDict(global_pars, sub_keys[0][0], instrument_parameters[instrument_key])
-    
+    # Merge default global pars with instrument specific settings
+    global_pars.update(instrument_parameters)
     # Now do the same for the user input dict
-    for user_key in user_input_options:
-        sub_keys = pcutils.find_all_items(global_pars, user_key)
-        if len(sub_keys) == 0:
-            global_pars[user_key] = user_input_options[user_key]
-        else:
-            pcutils.setInDict(global_pars, sub_keys[0][0], user_input_options[user_key])
-            
+    global_pars.update(user_input_options)
+
     # Now do something similar for the model blueprints dictionary
+    # The model blueprints always contain all the model compnents (keys) defined in the defauly blueprints.
+    # If a user wishes to disable a model component, they can set the n_delay keyword to anything larger than n_template_fits
+    # If a user wishes to use a different model component in place of default one, they can do so by changing the class keyword
+    # If a user wishes to add a new model comopnent, they can add it. But it must have a new name.
+    # If a user wishes to modify the default settings, they can do so by creating a new branch.
+    # So, if a key is common to the user blueprints and instrument blueprints, the sub keys are updated.
     for user_key in user_model_blueprints:
-        # If the key is not in the dictionary, just add the model
-        if user_key not in model_blueprints:
+        if user_key in model_blueprints: # Key is common, update sub keys only
+            model_blueprints[user_key].update(user_model_blueprints[user_key])
+        else: # Key is new, just add
             model_blueprints[user_key] = user_model_blueprints[user_key]
-        else:
-            # Otherwise, we need to update the according subkey
-            # For now, only a first lvl sub key is supported.
-            for user_sub_key in user_model_blueprints[user_key]:
-                model_blueprints[user_key][user_sub_key] = user_model_blueprints[user_key][user_sub_key]
             
     # Helpful things if we do a zeroth iteration with no stellar template (and thus no rvs)
     if model_blueprints['star']['input_file'] is not None:
