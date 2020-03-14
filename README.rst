@@ -71,8 +71,7 @@ For each instrument, the data should be formatted as follows. Each full frame im
 iSHELL
 ******
 
-- K=3 : 1=normalized flux, col2=normalized flux unc, col3=bad pix array (1=good, 0=bad). For now the default is the files must go from red to blue in wavelength.
-- JD must be available through key TCS_UTC, and exposure time through TCS_UTC (default IRTF header keys).
+
 
 CHIRON (supported, minimal testing for many different data sets)
 ****************************************************************
