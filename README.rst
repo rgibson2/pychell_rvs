@@ -65,7 +65,22 @@ Supported Instruments
 Data Format
 ***********
 
+For each instrument, the data should be formatted as follows. Each full frame image (all orders) corresponds to a single fits file. This file contains header information (including time info to compute the exposure midpoint). The data is formatted as a single array with shape=(n_orders, n_data_pix, K), where K is some integer specific to the data.
 
+iSHELL
+******
+- K=3 : 1=normalized flux, col2=normalized flux unc, col3=bad pix array (1=good, 0=bad). For now the default is the files must go from red-> blue in wavelength.
+- JD must be available through key TCS_UTC, and exposure time through TCS_UTC (default IRTF header keys).
+
+CHIRON (supported, minimal testing for many different data sets)
+******
+- K=2 : 1=wavelength in angstroms, 2=flux. flux uncertanties are dummy arrays until I learn more about CHIRON.
+- DATE keyword must contain the UTC and EXPTIME contains the exposure time. Until the exposure meter info is found, we assume the midpoint of the exposure.
+
+PARVI (under development)
+*****
+- K=7 : 1=wavelength in nm (converted in code to angstroms), 2=...
+- Header keys : ???
 
 
 Run with above instrument
@@ -129,13 +144,6 @@ Each instrument defines its own default_model_blueprints dictionary, stored in p
 3. Key exists only in the default blueprints - Default settings are used.
 
 Example of overriding blueprints model to start from a synthetic stellar template. The default setting was ``None`` - to start from a flat stellar template. This will now start things from a real template.
-
-
- ``
-'star' : {
-    'input_file' : '/path/to/input_file/'
-}
- `` 
  
 
 There are a few special keys required for each entry in this dictionary (see defining new models below). The format of each sub dictionary can be anything that the model supports. So, to know how to override settings for other mode components, one must look at the default model (in default_model_blueprints) to see what is available.
