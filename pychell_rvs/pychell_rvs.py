@@ -134,7 +134,7 @@ def pychell_rvs_main(user_input_options, user_model_blueprints):
         if not gpars['do_init_guess']:
 
             print('  Iteration: 0 (flat stellar template, no RVs)', flush=True)
-            fit_spectra(forward_models, 0, templates_dict, gpars)
+            forward_models.fit_spectra(0, templates_dict, gpars)
 
             if gpars['n_template_fits'] == 0:
                 # Output and continue to next order
@@ -142,9 +142,9 @@ def pychell_rvs_main(user_input_options, user_model_blueprints):
                     forward_models[i].save_final_outputs(gpars)
                 continue
             else:
-                stellar_templates[:, 1] = update_stellar_template(templates_dict, forward_models, 0, gpars)
-                update_model_params(forward_models, 0, gpars)
-                templates_dict['star'] = np.array([stellar_templates[:, 0], stellar_templates[:, 1]]).T
+                update_stellar_template(templates_dict, forward_models, 0, gpars)
+                stellar_templates[:, 1] = templates_dict['star'][:, 1]
+                forward_models.update_model_params(0, gpars)
 
         # Iterate over remaining stellar template generations
         for iter_num in range(gpars['n_template_fits']):
@@ -179,6 +179,7 @@ def pychell_rvs_main(user_input_options, user_model_blueprints):
                     cubic_spline_lsq_template(templates_dict, forward_models, iter_num+gpars['ndi'], gpars)
                 else:
                     update_stellar_template(templates_dict, forward_models, iter_num+gpars['ndi'], gpars)
+                stellar_templates[:, iter_num+1] = templates_dict['star'][:, 1]
 
         # Save forward model outputs
         print('Saving Final Outputs ... ', flush=True)
@@ -583,8 +584,6 @@ def init_pipeline(user_input_options, user_model_blueprints):
     if global_pars['bary_corr_file'] is None:
         global_pars['BJDS'] = np.array([getattr(data_all_first_order[ispec], 'BJD') for ispec in range(global_pars['n_spec'])]).astype(np.float64)
         global_pars['bary_corrs'] = np.array([getattr(data_all_first_order[ispec], 'bary_corr') for ispec in range(global_pars['n_spec'])]).astype(np.float64)
-        
-    #np.savetxt('bary_corrs_toi836.txt', np.array([global_pars['BJDS'], global_pars['bary_corrs']]).T, delimiter=',')
     
     # Sort by BJD
     # Resort the filenames as well so we only have to do this once.

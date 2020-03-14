@@ -25,26 +25,47 @@ This should install the relevant dependencies.
 Getting Started
 ===============
 
-Below is a quick-start guide which fits 5 nights (30 spectra) of Barnard's Star spectra using spectra from the iSHELL spectrograph. The wavelength solution and LSF are obtained from a methane gas cell, which are provided in default_templates. Open a terminal in the examples/gj699_ishell/ directory. Run
+Below is a quick-start guide which fits 4 nights (8 spectra) of Barnard's Star spectra using spectra from the iSHELL spectrograph. ONly orders 11, 13, and 15 are fit. The wavelength solution and LSF are obtained from a methane gas cell, which are provided in default_templates.
 
-``python gj699_ishell_example.py.``
+First, copy the example folder GJ_699 to a new location of your choice. Open a terminal window in this new location. Run:
+
+``python gj699_ishell_example.py``
+
+If all goes well, the code should start printing helpful messages as it runs, including best fit parameters as fits finish. An output directory will also be created in the current folder called ``GJ_699_default_test_run``. This folder contains the global parameters dictionary (stored in a .npz file) used throughout the code and sub folders for each order. Each sub folder contains the following:
+
+1. Fits - Contains the forward model plots for each iteration. Also contains ``.npz`` files with the following keys:
+    - wave : The wavelegnth solutions for this spectrum, np.ndarray, shape=(n_data_pix, n_template_fits)
+    - models : The best fit constructed forward models for this spectrum, np.ndarray, shape=(n_data_pix, n_template_fits)
+    - residuals : The residuals for this spectrum (data - model), np.ndarray, shape=(n_data_pix, n_template_fits)
+    - data : The data for this observation, np.ndarray, shape=(n_data_pix, 3), col1 is flux, col2 is flux_unc, col3 is badpix
+
+2. Opt - Contains the optimization results from the Nelder-Mead fitting stored in .npz files. This must be loaded with allow_pickle=True. Keys are:
+    - best_fit_pars : The best fit parameters, np.ndarray, shape=(n_template_fits,). Each entry is a Parameters object.
+    - opt : np.ndarray, shape=(n_template_fits, 2). col1=final RMS RMS returned by the solver. col2=total target function calls.
+
+3. RVs - Contains the RVs for this order. Fits for each iteration are in .png files. The RVs are stored in the per iteration .npz files with the following keys:
+    - rvs : The best fit RVs, np.ndarray, shape=(n_spec, n_template_fits)
+    - rvs_nightly : The co-added ("nightly" RVs), np.ndarray, shape=(n_nights, n_template_fits)
+    - rvs_unc_nightly : The corresponding 1 sigma error bars for the nightly RVs, same shape
+    - BJDS : The bary-centric Julian dates which correspond to the single RVs.
+    - BJDS_nightly : The nightly BJDS which correspond to the nightly RVs.
+    - n_obs_nights : The number of observation observed on each night, np.ndarray, shape=(n_nights,)
+
+4. Stellar_Templates - Contains the stellar template over iterations. For now contains a single .npz file with key:
+    - stellar_templates : The stellar template used in each iteration, np.ndarray, shape=(n_model_pix, n_template_fits+1). col1 is wavelength, remaining cols are flux.
+
+And that's it!
 
 
+=====================
+Supported Instruments
+=====================
 
+To use the code on a supported instrument but using ones own data, we look closer at the the example file ``gj699_example.py``, which defines two dictionaries:
 
+1. user_input_options
 
-
-
-
-
-
-
-
-
-
-
-
-
+2. user_model_blueprints
 
 
 

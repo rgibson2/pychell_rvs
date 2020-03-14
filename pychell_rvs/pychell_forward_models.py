@@ -138,7 +138,7 @@ class ForwardModels(list):
             # Stellar Template, after zeroth iteration
             if iter_num == 0 and not gpars['do_init_guess']:
                 self[ispec].modify(model_components={'star': True})
-                self[ispec].initial_parameters[self[ispec].models_dict['star'].par_names[0]].setv(value=-1*self[ispec].databary_corr)
+                self[ispec].initial_parameters[self[ispec].models_dict['star'].par_names[0]].setv(value=-1*self[ispec].data.bary_corr)
 
             # Enable any models that were delayed
             for model in self[ispec].models_dict.keys():
@@ -149,10 +149,10 @@ class ForwardModels(list):
     # Wrapper to fit all spectra
     def fit_spectra(self, iter_num, templates_dict, gpars):
 
-        if gpars['n_threads'] > 1:
+        # Fit in Parallel
+        stopwatch = pcutils.StopWatch()
 
-            # Fit in Parallel
-            stopwatch = pcutils.StopWatch()
+        if gpars['n_threads'] > 1:
 
             # Construct the arguments
             iter_pass = []

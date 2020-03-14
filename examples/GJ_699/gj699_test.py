@@ -1,7 +1,6 @@
 
 import pychell_rvs.pychell_rvs as pychell_rvs
 import os
-from pdb import set_trace as stop
 
 # This provides access to default templates in code_path + 'default_templates' + os.sep
 code_path = os.path.dirname(pychell_rvs.__file__) + os.sep
@@ -17,7 +16,7 @@ user_input_options = {
     "do_orders": [11, 13, 15],
     "overwrite_output": True,
     "n_template_fits": 3,
-    "n_threads": 1,
+    "n_threads": 8,
     "verbose_plot": True,
     "verbose_print": True,
     "nights_for_template": 'all',
