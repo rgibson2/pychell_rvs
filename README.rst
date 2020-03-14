@@ -144,6 +144,12 @@ Each instrument defines its own default_model_blueprints dictionary, stored in p
 3. Key exists only in the default blueprints - Default settings are used.
 
 Example of overriding blueprints model to start from a synthetic stellar template. The default setting was ``None`` - to start from a flat stellar template. This will now start things from a real template.
+
+ ``
+'star' : {
+    'input_file' : '/path/to/input_file/'
+}
+ `` 
  
 
 There are a few special keys required for each entry in this dictionary (see defining new models below). The format of each sub dictionary can be anything that the model supports. So, to know how to override settings for other mode components, one must look at the default model (in default_model_blueprints) to see what is available.
