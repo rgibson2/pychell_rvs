@@ -88,6 +88,7 @@ REQUIRED
 
 OPTIONAL
 ########
+
 - bary_corr_file : A csv file in data_input_path containing the bary-center info. col1=BJDS, col2=bc_vels. The order must be consistent with the order provided in filelist. (str), DEFAULT: None, and bc info is calculated with barycorrpy.
 - overwrite_output : If True, the output path is overwritten as the code runs. (bool). DEFAULT: True.
 - n_cores : The number of cores used in the Nelder-Mead fitting and possible cross corr analysis. (int). DEFAULT: 1
@@ -122,10 +123,16 @@ Example of overriding blueprints model to start from a synthetic stellar templat
 ``
 'star': {
     'input_file': '/path/to/input_file/'
-},
+}
 ``
 
-The default setting was ``None`` - to start from a flat stellar template.
+The default setting was ``None`` - to start from a flat stellar template. This will point to 
+
+=========
+Templates
+=========
+
+Custom (synthetic or empirical) templates may be used. Templates must be stored in .npz files and have the following keywords: wave (in angstroms), flux. Templates are always cropped to the order (with small padding).
 
 
 ===========================
