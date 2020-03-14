@@ -12,7 +12,7 @@ Extracts radial-velocities from reduced 1-dimensional echelle spectra by forward
 For more information on adapting this code, see link here.
 
 ============
-installation
+Installation
 ============
 
 from the directory this file is in, install pychell_rvs with
@@ -60,6 +60,31 @@ And that's it!
 =====================
 Supported Instruments
 =====================
+
+***********
+Data Format
+***********
+
+For each instrument, the data should be formatted as follows. Each full frame image (all orders) corresponds to a single fits file. This file contains header information (including time info to compute the exposure "midpoint"). The data is formatted as a single array with shape=(n_orders, n_data_pix, K), where K is some integer specific to the data.
+
+iSHELL
+******
+- K=3 : 1=normalized flux, col2=normalized flux unc, col3=bad pix array (1=good, 0=bad). For now the default is the files must go from red-> blue in wavelength.
+- JD must be available through key TCS_UTC, and exposure time through TCS_UTC (default IRTF header keys).
+
+CHIRON (supported, minimal testing for many different data sets)
+******
+- K=2 : 1=wavelength in angstroms, 2=flux. flux uncertanties are dummy arrays until I learn more about CHIRON.
+- DATE keyword must contain the UTC and EXPTIME contains the exposure time. Until the exposure meter info is found, we assume the midpoint of the exposure.
+
+PARVI (under development)
+*****
+- K=7 : 1=wavelength in nm (converted in code to angstroms), 2=...
+- Header keys : ???
+
+
+Run with above instrument
+*************************
 
 To use the code on a supported instrument but using ones own data, we look closer at the the example file ``gj699_example.py``, which defines two dictionaries and passes these to the pipeline:
 
@@ -118,7 +143,7 @@ Each instrument defines its own default_model_blueprints dictionary, stored in p
 2. Key exists only in the user blueprints but not the default - The new model is added and must contain all information necessary (see below on defnining new models).
 3. Key exists only in the default blueprints - Default settings are used.
 
-Example of overriding blueprints model to start from a synthetic stellar template:
+Example of overriding blueprints model to start from a synthetic stellar template. The default setting was ``None`` - to start from a flat stellar template. This will now start things from a real template.
 
 
  ``
@@ -128,14 +153,13 @@ Example of overriding blueprints model to start from a synthetic stellar templat
  `` 
  
 
-The default setting was ``None`` - to start from a flat stellar template. This will now start things from a real template.
+There are a few special keys required for each entry in this dictionary (see defining new models below). The format of each sub dictionary can be anything that the model supports. So, to know how to override settings for other mode components, one must look at the default model (in default_model_blueprints) to see what is available.
 
 =========
 Templates
 =========
 
 Custom (synthetic or empirical) templates may be used. Templates must be stored in .npz files and have the following keywords: wave (in angstroms), flux. Templates are always cropped to the order (with small padding).
-
 
 ===========================
 Support for New Instruments

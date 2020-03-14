@@ -69,7 +69,7 @@ class SpecDataCHIRON(SpecData):
         
         # Extract specific keys from the observation details used in the code.
         # NOTE: Figure out where exp meter info is.
-        self.SNR = float(self.obs_details['EMAVGSQ'])
+        # self.SNR = float(self.obs_details['EMAVGSQ'])
         self.JD = Time(self.obs_details['DATE'].replace('T', ' '), scale='utc').jd + float(self.obs_details['EXPTIME']) / (2 * 3600 * 24)
         
         # Calculate barycenter velocities
@@ -107,7 +107,7 @@ class SpecDataiSHELL(SpecData):
         self.obs_details = dict(fits_data.header)
         
         # Extract specific keys from the observation details used in the code.
-        self.SNR = float(self.obs_details['SNR'])
+        #self.SNR = float(self.obs_details['SNR'])
         self.JD = float(self.obs_details['TCS_UTC']) + 2400000.5 + float(self.obs_details['ITIME']) / (2 * 3600 * 24)
         
         # Calculate barycenter velocities
