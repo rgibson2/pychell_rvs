@@ -25,7 +25,7 @@ This should install the relevant dependencies.
 Getting Started
 ===============
 
-Below is a quick-start guide which fits 4 nights (8 spectra) of Barnard's Star spectra using spectra from the iSHELL spectrograph. ONly orders 11, 13, and 15 are fit. The wavelength solution and LSF are obtained from a methane gas cell, which are provided in default_templates.
+Below is a quick-start guide which fits 4 nights (8 spectra) of Barnard's Star spectra using spectra from the iSHELL spectrograph. Only orders 11, 13, and 15 are fit. The wavelength solution and LSF are obtained from a methane gas cell, which are provided in default_templates.
 
 First, copy the example folder GJ_699 to a new location of your choice. Open a terminal window in this new location. Run:
 
