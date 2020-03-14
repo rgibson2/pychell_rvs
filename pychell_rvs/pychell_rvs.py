@@ -615,7 +615,7 @@ def init_pipeline(user_input_options, user_model_blueprints):
     print('TAG: ' + global_pars['tag'], flush=True)
     print('N TEMPLATE ITERATIONS: ' + str(global_pars['n_template_fits']), flush=True)
     print('N ECHELLE ORDERS TO FIT: ' + str(global_pars['n_do_orders']), flush=True)
-    print('N CORES USED: ' + str(global_pars['n_threads']), flush=True)
+    print('N CORES USED: ' + str(global_pars['n_cores']), flush=True)
 
     return global_pars, model_blueprints, data_all_first_order
 
