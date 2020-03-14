@@ -68,10 +68,6 @@ Data Format
 For each instrument, the data should be formatted as follows. Each full frame image (all orders) corresponds to a single fits file. This file contains header information (including time info to compute the exposure midpoint). The data is formatted as a single array with shape=(n_orders, n_data_pix, K), where K is some integer specific to the data.
 
 
-iSHELL
-******
-
-
 To use the code on a supported instrument but using ones own data, we look closer at the the example file ``gj699_example.py``, which defines two dictionaries and passes these to the pipeline:
 
 1. user_input_options
