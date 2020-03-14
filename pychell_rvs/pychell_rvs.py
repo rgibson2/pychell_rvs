@@ -601,7 +601,7 @@ def init_pipeline(user_input_options, user_model_blueprints):
     np.savez(global_pars['run_output_path'] + 'global_parameters_dictionary.npz', global_pars)
     
     # Matplotlib backend
-    if global_pars['n_threads'] > 1 or platform != 'darwin':
+    if global_pars['n_cores'] > 1 or platform != 'darwin':
         matplotlib.use("AGG")
     else:
         matplotlib.use("MacOSX")
