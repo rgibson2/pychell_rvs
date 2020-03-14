@@ -27,6 +27,9 @@ default_config = {
     # In theory 8 is sufficient for any instrument. Some are probably fine at 4.
     'model_resolution': 8,
     
+    # Which nights to use for the stellar template (empty list for all nights)
+    'nights_for_template': [],
+    
     # The target function. Must live in pychell_target_functions.py
     'target_function': 'rms_model',
     

@@ -20,10 +20,7 @@ default_instrument_parameters = {
     # Default iSHELL instrument KGAS settings
     "n_orders": 29,
     "n_data_pix": 2048,
-    "crop_pix": [200, 200],
-    
-    # Whether or not to print best fit parameters and add template to plots
-    "verbose": False
+    "crop_pix": [200, 200]
 }
 
 

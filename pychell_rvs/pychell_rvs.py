@@ -210,9 +210,9 @@ def cubic_spline_lsq_template(templates_dict, forward_models, iter_num, gpars):
         if bad.size > 0:
             rms_weights[bad] = 0
             
-    if gpars['nights_for_template'] == 'all': # use all nights
+    if len(gpars['nights_for_template']) == 0: # use all nights
         template_spec_indices = np.arange(gpars['n_spec']).astype(int)
-    elif type(gpars['nights_for_template']) is list: # use specified nights
+    else: # use specified nights
         template_spec_indices = []
         for inight in gpars['nights_for_template']:
             template_spec_indices += pcutils.get_spec_indices_from_night(inight - 1, gpars)

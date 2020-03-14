@@ -152,14 +152,14 @@ class ForwardModels(list):
         # Fit in Parallel
         stopwatch = pcutils.StopWatch()
 
-        if gpars['n_threads'] > 1:
+        if gpars['n_cores'] > 1:
 
             # Construct the arguments
             iter_pass = []
             for spec_num in range(gpars['n_spec']):
                 iter_pass.append((self[spec_num], iter_num, templates_dict, gpars))
             
-            presults = Parallel(n_jobs=gpars['n_threads'], verbose=0, batch_size=1)(delayed(ForwardModels.solver_wrapper)(*iter_pass[ispec]) for ispec in range(gpars['n_spec']))
+            presults = Parallel(n_jobs=gpars['n_cores'], verbose=0, batch_size=1)(delayed(ForwardModels.solver_wrapper)(*iter_pass[ispec]) for ispec in range(gpars['n_spec']))
 
             # Sort of redundant
             for ispec in range(gpars['n_spec']):
@@ -214,7 +214,7 @@ class ForwardModels(list):
         stopwatch = pcutils.StopWatch()
         print('Cross Correlating Spectra ... ', flush=True)
 
-        if gpars['n_threads'] > 1:
+        if gpars['n_cores'] > 1:
 
             # Construct the arguments
             iter_pass = []
@@ -222,7 +222,7 @@ class ForwardModels(list):
                 iter_pass.append((self[ispec], templates_dict, iter_num, gpars))
 
             # Cross Correlate in Parallel
-            presults = Parallel(n_jobs=gpars['n_threads'], verbose=0, batch_size=1)(delayed(ForwardModels.cc_wrapper)(*iter_pass[ispec]) for ispec in range(gpars['n_spec']))
+            presults = Parallel(n_jobs=gpars['n_cores'], verbose=0, batch_size=1)(delayed(ForwardModels.cc_wrapper)(*iter_pass[ispec]) for ispec in range(gpars['n_spec']))
 
             # Sort of redundant
             for ispec in range(gpars['n_spec']):
