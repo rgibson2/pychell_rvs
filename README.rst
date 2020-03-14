@@ -117,3 +117,11 @@ Each instrument defines its own default_model_blueprints dictionary, stored in p
 1. Key is common to both dictionaries - The item will only be updated according to the sub keys.
 2. Key exists only in the user blueprints but not the default - The new model is added and must contain all information necessary (see below on defnining new models).
 3. Key exists only in the default blueprints - Default settings are used.
+
+Example of overriding blueprints model to start from a synthetic stellar template:
+
+``
+'star': {
+    'input_file': '/path/to/input_file/'
+}
+``
