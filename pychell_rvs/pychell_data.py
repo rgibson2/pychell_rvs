@@ -118,40 +118,41 @@ class SpecDataiSHELL(SpecData):
             self.bary_corr = gpars['bary_corrs'][self.spec_num]
             self.BJD = gpars['BJDS'][self.spec_num]
 
-class SpecDataPARVI(SpecData):
+#class SpecDataPARVI(SpecData):
     
-    def __init__(self, input_file, order_num, spec_num, gpars, init_obs_details=False, init_data=False):
+#    def __init__(self, input_file, order_num, spec_num, gpars, init_obs_details=False, init_data=False):
         
-        super().__init__(input_file, order_num, spec_num, gpars)
+#        super().__init__(input_file, order_num, spec_num, gpars)
         
-    def parse(self, gpars):
         
-        # NOTE: TEMP lists for testing, fix when order IDs are sorted out.
-        self.obs_details = {}
+    # Below is code to parse the PARVI data for what I think is the preferred data format.
+    # Uncomment and tweak at will!
+    # def parse(self, gpars):
         
         # Load the flux, flux unc, and bad pix arrays. Also load the known wavelength grid for a starting point
-        fits_data = fits.open(gpars['data_input_path'] + self.input_file)[0]
-        self.wave_grid, self.flux, self.flux_unc = fits_data.data[self.order_num, :, 0].astype(np.float64), fits_data.data[self.order_num, :, 5].astype(np.float64), fits_data.data[self.order_num, :, 6].astype(np.float64)
+        # fits_data = fits.open(gpars['data_input_path'] + self.input_file)[0]
+        #self.wave_grid, self.flux, self.flux_unc = fits_data.data[self.order_num, :, 0].astype(np.float64), fits_data.data[self.order_num, :, 5].astype(np.float64), fits_data.data[self.order_num, :, 6].astype(np.float64)
         
-        # Normalize
-        continuum = pcmath.weighted_median(self.flux, med_val=0.98)
-        self.flux /= continuum
-        self.flux_unc /= continuum
+        # Normalize according to 98th percentile in flux
+        #continuum = pcmath.weighted_median(self.flux, med_val=0.98)
+        #self.flux /= continuum
+        #self.flux_unc /= continuum
         
-        # Force bad cropped pix to be zero just in cases
-        self.badpix = np.ones(gpars['n_data_pix'], dtype=np.float64)
-        self.badpix[0:gpars['crop_pix'][0]] = 0
-        self.badpix[-gpars['crop_pix'][1]:] = 0
+        # Create bad pix array, further cropped later
+        #self.badpix = np.ones(gpars['n_data_pix'], dtype=np.float64)
+        # bad = np.where(self.flux)
+        #if bad.size > 0:
+        #    self.badpix[bad] = 0
         
-        # Convert wavelength grid to Angstroms
-        self.wave_grid *= 10
+        # Convert wavelength grid to Angstroms, required!
+        #self.wave_grid *= 10
         
-        self.JD = float(fits_data.header['JD'])
+        #self.JD = float(fits_data.header['JD'])
         
-        if gpars['bary_corr_file'] is None and gpars['bary_corrs'] is None:
-            self.bary_corr = get_BC_vel(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
-            self.BJD = JDUTC_to_BJDTDB(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
-        else:
-            self.bary_corr = gpars['bary_corrs'][self.spec_num]
-            self.BJD = gpars['BJDS'][self.spec_num]
+        #if gpars['bary_corr_file'] is None and gpars['bary_corrs'] is None:
+        #    self.bary_corr = get_BC_vel(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
+        #    self.BJD = JDUTC_to_BJDTDB(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
+        #else:
+        #    self.bary_corr = gpars['bary_corrs'][self.spec_num]
+        #    self.BJD = gpars['BJDS'][self.spec_num]
         
