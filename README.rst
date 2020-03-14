@@ -65,7 +65,7 @@ Supported Instruments
 Data Format
 ***********
 
-For each instrument, the data should be formatted as follows. Each full frame image (all orders) corresponds to a single fits file. This file contains header information (including time info to compute the exposure midpoint). The data is formatted as a single array with shape=(n_orders, n_data_pix, K), where K is some integer specific to the data.
+For each instrument, the data should be formatted as follows. Each full frame image (all orders) corresponds to a single fits file. This file contains header information (including time info to compute the exposure midpoint). The data is formatted as a single array with shape (n_orders, n_data_pix, K), where K is some integer specific to the data.
 
 iSHELL
 ******
