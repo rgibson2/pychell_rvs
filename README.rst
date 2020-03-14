@@ -64,10 +64,16 @@ Supported Instruments
 To use the code on a supported instrument but using ones own data, we look closer at the the example file ``gj699_example.py``, which defines two dictionaries:
 
 1. user_input_options
-
 2. user_model_blueprints
 
+******************
+user_model_options
+******************
 
+
+*********************
+user_model_blueprints
+*********************
 
 The code is generalized to support any instrument, but before doing so at least two abstarct classes need to be implemented:
 1. SpecData
