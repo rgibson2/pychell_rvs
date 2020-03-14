@@ -72,11 +72,6 @@ iSHELL
 ******
 
 
-
-Run with above instrument
-*************************
-
-
 To use the code on a supported instrument but using ones own data, we look closer at the the example file ``gj699_example.py``, which defines two dictionaries and passes these to the pipeline:
 
 1. user_input_options
