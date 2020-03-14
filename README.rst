@@ -120,8 +120,17 @@ Each instrument defines its own default_model_blueprints dictionary, stored in p
 
 Example of overriding blueprints model to start from a synthetic stellar template:
 
-``
-'star': {
-    'input_file': '/path/to/input_file/'
-}
-``
+The default setting was ``None`` - to start from a flat stellar template. This will point to 
+
+=========
+Templates
+=========
+
+Custom (synthetic or empirical) templates may be used. Templates must be stored in .npz files and have the following keywords: wave (in angstroms), flux. Templates are always cropped to the order (with small padding).
+
+
+===========================
+Support for New Instruments
+===========================
+
+Coming soon!
