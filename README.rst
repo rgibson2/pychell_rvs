@@ -41,7 +41,7 @@ If all goes well, the code should start printing helpful messages as it runs, in
 
 2. Opt - Contains the optimization results from the Nelder-Mead fitting stored in .npz files. This must be loaded with allow_pickle=True. Keys are:
     - best_fit_pars : The best fit parameters, np.ndarray, shape=(n_template_fits,). Each entry is a Parameters object.
-    - opt : np.ndarray, shape=(n_template_fits, 2). col1=final RMS RMS returned by the solver. col2=total target function calls.
+    - opt : np.ndarray, shape=(n_template_fits, 2). col1=final RMS returned by the solver. col2=total target function calls.
 
 3. RVs - Contains the RVs for this order. Fits for each iteration are in .png files. The RVs are stored in the per iteration .npz files with the following keys:
     - rvs : The best fit RVs, np.ndarray, shape=(n_spec, n_template_fits)
