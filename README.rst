@@ -121,12 +121,12 @@ Each instrument defines its own default_model_blueprints dictionary, stored in p
 Example of overriding blueprints model to start from a synthetic stellar template:
 
 
-`` 'star': {
-    'input_file': '/path/to/input_file/'
+`` \'star\': {
+    \'input_file\': \'/path/to/input_file/\'
 `` }
  
 
-The default setting was ``None`` - to start from a flat stellar template. This will point to 
+The default setting was ``None`` - to start from a flat stellar template. This will now start things from a real template.
 
 =========
 Templates
