@@ -73,19 +73,6 @@ iSHELL
 
 
 
-CHIRON (supported, minimal testing for many different data sets)
-****************************************************************
-
-- K=2 : 1=wavelength in angstroms, 2=flux. flux uncertanties are dummy arrays until I learn more about CHIRON.
-- DATE keyword must contain the UTC and EXPTIME contains the exposure time. Until the exposure meter info is found, we assume the midpoint of the exposure.
-
-PARVI (under development)
-*************************
-
-- K=7 : 1=wavelength in nm (converted in code to angstroms), 2=...
-- Header keys : ???
-
-
 Run with above instrument
 *************************
 
