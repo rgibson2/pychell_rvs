@@ -253,7 +253,7 @@ def cubic_spline_lsq_template(templates_dict, forward_models, iter_num, gpars):
 
     # Loop over spectra and check which bin an observation belongs to
     # Then update the weights accordingly.
-    if gpars['nights_for_template'] == 'all':
+    if len(gpars['nights_for_template']) == 0:
         for ispec in range(gpars['n_spec']):
             vbc = forward_models[ispec].data.bary_corr
             y = np.where(histx >= vbc)[0][0] - 1
@@ -325,9 +325,9 @@ def update_stellar_template(templates_dict, forward_models, iter_num, gpars):
     rms = np.array([forward_models[ispec].opt[iter_num][0] for ispec in range(gpars['n_spec'])]) 
     rms_weights = 1 / rms**2
     
-    if gpars['nights_for_template'] == 'all': # use all nights
+    if len(gpars['nights_for_template']) == 0: # use all nights
         template_spec_indices = np.arange(gpars['n_spec']).astype(int)
-    elif type(gpars['nights_for_template']) is list: # use specified nights
+    else: # use specified nights
         template_spec_indices = []
         for inight in gpars['nights_for_template']:
             template_spec_indices += pcutils.get_spec_indices_from_night(inight - 1, gpars)
@@ -393,7 +393,7 @@ def update_stellar_template(templates_dict, forward_models, iter_num, gpars):
 
     # Loop over spectra and check which bin an observation belongs to
     # Then update the weights accordingly.
-    if gpars['nights_for_template'] == 'all':
+    if len(gpars['nights_for_template']):
         for ispec in range(gpars['n_spec']):
             vbc = forward_models[ispec].data.bary_corr
             y = np.where(histx >= vbc)[0][0] - 1
