@@ -19,7 +19,7 @@ user_input_options = {
     "n_threads": 8,
     "verbose_plot": True,
     "verbose_print": True,
-    "nights_for_template": 'all',
+    "nights_for_template": [],
     "model_resolution": 8
 }
 
