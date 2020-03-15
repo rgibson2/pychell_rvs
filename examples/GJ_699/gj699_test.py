@@ -16,10 +16,10 @@ user_input_options = {
     "do_orders": [11, 13, 15],
     "overwrite_output": True,
     "n_template_fits": 3,
-    "n_threads": 8,
+    "n_threads": 1,
     "verbose_plot": True,
     "verbose_print": True,
-    "nights_for_template": 'all',
+    "nights_for_template": [],
     "model_resolution": 8
 }
 
