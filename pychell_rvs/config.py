@@ -33,6 +33,9 @@ default_config = {
     # The target function. Must live in pychell_target_functions.py
     'target_function': 'rms_model',
     
+    # Number of cores to use (for Nelder-Mead fitting and cross corr analysis)
+    'n_cores': 8,
+    
     # Flags the N worst pixels in fitting
     'flag_n_worst_pixels': 20,
     

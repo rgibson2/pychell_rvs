@@ -33,7 +33,7 @@ First, copy the example folder GJ_699 to a new location of your choice. Open a t
 
 If all goes well, the code should start printing helpful messages as it runs, including best fit parameters as fits finish. An output directory will also be created in the current folder called ``GJ_699_default_test_run``. This folder contains the global parameters dictionary (stored in a .npz file) used throughout the code and sub folders for each order. Each sub folder contains the following:
 
-1. Fits - Contains the forward model plots for each iteration. Also contains ``.npz`` files with the following keys:
+1. Fits - Contains the forward model plots for each iteration. The spectral numbers are in chornological order. Also contains .npz files with the following keys:
     - wave : The wavelegnth solutions for this spectrum, np.ndarray, shape=(n_data_pix, n_template_fits)
     - models : The best fit constructed forward models for this spectrum, np.ndarray, shape=(n_data_pix, n_template_fits)
     - residuals : The residuals for this spectrum (data - model), np.ndarray, shape=(n_data_pix, n_template_fits)
@@ -65,9 +65,9 @@ Supported Instruments
 Data Format
 ***********
 
-For each instrument, the data should be formatted as follows. Each full frame image (all orders) corresponds to a single fits file. This file contains header information (including time info to compute the exposure midpoint). The data is formatted as a single array with shape=(n_orders, n_data_pix, K), where K is some integer specific to the data.
+For each instrument, the data should be formatted as follows. Each full frame image (all orders) corresponds to a single fits file. This file contains header information (including time info to compute the exposure midpoint). The data is formatted as a single array with shape=(n_orders, n_data_pix, K), where K is some integer specific to the data. Technically a new instrument could easily override this behavior. However it seems this is a nice and seemingly standardized way to organize reduced 1d spectra.
 
-To use the code on a supported instrument but using ones own data, we look closer at the the example file ``gj699_example.py``, which defines two dictionaries and passes these to the pipeline:
+To use the code on a supported instrument but using ones own data (or even just make modifications to the example), we look closer at the the example file ``gj699_example.py``, which defines two dictionaries and passes these to the pipeline:
 
 1. user_input_options
 2. user_model_blueprints
@@ -78,12 +78,12 @@ Below is information on how to use these dictionaries.
 user_model_options
 ******************
 
-This dictionary contains both necessary entries to get things going, and optional entries which have default settings the user may wish to overwrite.
+This dictionary contains both required entries to get things going, and optional entries which have default settings the user may wish to override.
 
 REQUIRED
 ########
 
-- instrument : The spectrogrpah the data was taken with. Must be in the supported instruments - iSHELL, PARVI, CHIRON, NIRSPEC. (str).
+- instrument : The spectrograph the data was taken with. Must be in the supported instruments - iSHELL, PARVI, CHIRON, NIRSPEC. (str).
 - data_input_path : The data input path. All spectra must be stored in this single directory. (str)
 - filelist : The text file containing the files (one per line) to be used in this run. This file must be stored in data_input_path. Order is not important (str).
 - output_path : The output path to store the run in. A single directory is created per run. (str).
