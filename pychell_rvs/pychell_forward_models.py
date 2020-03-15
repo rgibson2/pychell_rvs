@@ -259,6 +259,8 @@ class ForwardModels(list):
         target_fun = getattr(pctargetfuns, gpars['target_function'])
 
         # The call to the nelder mead solver
+        stop()
+        
         opt_result = pcsolver.simps(gp, target_fun, vlb, vub, vp, no_improv_break=3, args_to_pass=args_to_pass)
 
         forward_model.best_fit_pars[iter_num] = pcmodelcomponents.Parameters.from_numpy(names=names, values=opt_result[0], minvs=vlb, maxvs=vub, varies=pcmath.mask_to_binary(vp, len(vlb)), mcmcscales=mcmc_scales)
