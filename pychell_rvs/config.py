@@ -43,6 +43,8 @@ default_config = {
     'verbose_plot': True,
     'verbose_print': False,
     
+    'bary_corr_file': None,
+    
     # The number of pixels to crop on each side of the spectrum
     'crop_pix': [50, 50],
     
