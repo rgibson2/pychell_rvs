@@ -252,6 +252,20 @@ class ForwardModels(list):
         names, gp, vlb, vub, vp, mcmc_scales = forward_model.initial_parameters.to_numpy(kind='all')
         vp = np.where(vp)[0].astype(int)
         
+        subspaces = []
+        for imodel, model in enumerate(forward_model.models_dict):
+            pnames = forward_model.models_dict[model].par_names
+            subspaces.append([])
+            for pname in pnames:
+                k = list(names).index(pname)
+                if k in vp:
+                    subspaces[-1].append(k)
+            if len(subspaces[-1]) == 0:
+                del subspaces[-1]
+            else:
+                subspaces[-1] = np.array(subspaces[-1])
+                
+        
         # Construct the extra arguments to pass to the target function
         args_to_pass = (forward_model, iter_num, templates_dict, gpars)
         
@@ -259,7 +273,8 @@ class ForwardModels(list):
         target_fun = getattr(pctargetfuns, gpars['target_function'])
 
         # The call to the nelder mead solver
-        opt_result = pcsolver.simps(gp, target_fun, vlb, vub, vp, no_improv_break=3, args_to_pass=args_to_pass)
+
+        opt_result = pcsolver.simps_super(gp, target_fun, vlb, vub, vp, no_improv_break=3, args_to_pass=args_to_pass, custom_subspace=np.array(subspaces, dtype=np.ndarray))
 
         forward_model.best_fit_pars[iter_num] = pcmodelcomponents.Parameters.from_numpy(names=names, values=opt_result[0], minvs=vlb, maxvs=vub, varies=pcmath.mask_to_binary(vp, len(vlb)), mcmcscales=mcmc_scales)
         forward_model.opt[iter_num, :] = opt_result[1:]
