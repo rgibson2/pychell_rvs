@@ -53,7 +53,6 @@ default_config = {
     # If true, instead of pairs, individual models are optimized alone.
     "super_simps": False,
     
-    
     # The number of pixels to crop on each side of the spectrum
     'crop_pix': [50, 50],
     
