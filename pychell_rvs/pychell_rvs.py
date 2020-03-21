@@ -137,9 +137,7 @@ def pychell_rvs_main(user_input_options, user_model_blueprints):
             forward_models.fit_spectra(0, templates_dict, gpars)
 
             if gpars['n_template_fits'] == 0:
-                # Output and continue to next order
-                for i in range(gpars['n_spec']):
-                    forward_models[i].save_final_outputs(gpars)
+                forward_models.save_final_outputs(gpars)
                 continue
             else:
                 update_stellar_template(templates_dict, forward_models, 0, gpars)
@@ -585,7 +583,10 @@ def init_pipeline(user_input_options, user_model_blueprints):
         global_pars['BJDS'] = np.array([getattr(data_all_first_order[ispec], 'BJD') for ispec in range(global_pars['n_spec'])]).astype(np.float64)
         global_pars['bary_corrs'] = np.array([getattr(data_all_first_order[ispec], 'bary_corr') for ispec in range(global_pars['n_spec'])]).astype(np.float64)
         
-    np.savetxt('bary_corrs_gj740.txt', np.array([global_pars['BJDS'], global_pars['bary_corrs']]).T, delimiter=',')
+        
+    if global_pars['compute_bc_only']:
+        np.savetxt(global_pars['run_output_path'] + 'bary_corrs_' + global_pars['star_name'].lower() + '.txt', np.array([global_pars['BJDS'], global_pars['bary_corrs']]).T, delimiter=',')
+        sys.exit("Computed BC Info only!")
     
     # Sort by BJD
     # Resort the filenames as well so we only have to do this once.

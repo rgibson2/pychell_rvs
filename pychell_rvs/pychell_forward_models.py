@@ -257,9 +257,23 @@ class ForwardModels(list):
         
         # Get the target function
         target_fun = getattr(pctargetfuns, gpars['target_function'])
-
-        # The call to the nelder mead solver
-        opt_result = pcsolver.simps(gp, target_fun, vlb, vub, vp, no_improv_break=3, args_to_pass=args_to_pass)
+        
+        if gpars['super_simps']:
+            # Get the custom subspace
+            subspaces = []
+            for imodel, model in enumerate(forward_model.models_dict):
+                subspaces.append([])
+                for pname in forward_model.models_dict[model].par_names:
+                    k = list(names).index(pname)
+                    if k in vp:
+                        subspaces[-1].append(list(vp).index(k))
+                        # OR new_index = list(vp).index(k)
+                if len(subspaces[-1]) == 0:
+                    del subspaces[-1]
+            subspaces = np.array([np.array(x) for x in subspaces], dtype=np.ndarray)
+            opt_result = pcsolver.simps_super(gp, target_fun, vlb, vub, vp, no_improv_break=3, args_to_pass=args_to_pass, custom_subspace=subspaces)
+        else:
+            opt_result = pcsolver.simps(gp, target_fun, vlb, vub, vp, no_improv_break=3, args_to_pass=args_to_pass)
 
         forward_model.best_fit_pars[iter_num] = pcmodelcomponents.Parameters.from_numpy(names=names, values=opt_result[0], minvs=vlb, maxvs=vub, varies=pcmath.mask_to_binary(vp, len(vlb)), mcmcscales=mcmc_scales)
         forward_model.opt[iter_num, :] = opt_result[1:]
@@ -287,7 +301,7 @@ class ForwardModels(list):
         print('    Fit Spectrum ' + str(forward_model.spec_num+1) + ' of ' + str(gpars['n_spec']) + ' in ' + str(round((stopwatch.time_since())/60, 2)) + ' min', flush=True)
 
         # Output a plot
-        forward_model.plot(iter_num, templates_dict, gpars)
+        forward_model.plot_model(iter_num, templates_dict, gpars)
 
         # Return new forward model object since we possibly fit in parallel
         return forward_model
@@ -381,7 +395,7 @@ class ForwardModel(ABC):
                 print(self.best_fit_pars[iter_num][pname])
     
     # Plots the forward model after each iteration with other template as well if verbose_plot = True
-    def plot(self, iter_num, templates_dict, gpars, save=False):
+    def plot_model(self, iter_num, templates_dict, gpars, save=False):
         
         # Extract the low res wave grid in proper units
         wave = self.wavelength_solutions[:, iter_num] * gpars['plot_wave_factor']
