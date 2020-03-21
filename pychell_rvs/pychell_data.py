@@ -3,8 +3,6 @@ from collections import OrderedDict
 from abc import ABC, abstractmethod # Abstract classes
 import glob # File searching
 import sys # sys utils
-from barycorrpy import get_BC_vel # BC velocity correction
-from barycorrpy.utc_tdb import JDUTC_to_BJDTDB
 import pdb # debugging
 stop = pdb.set_trace
 
@@ -51,8 +49,6 @@ class SpecDataCHIRON(SpecData):
     def parse(self, gpars):
         
         # Load the flux, flux unc, and bad pix arrays
-        #fname = glob.glob(gpars['data_input_path'] + self.input_file[:-4] + '_ord' + str(self.order_num+1) + '.npz')[0]
-        #data_ = np.load(fname, allow_pickle=True)
         fits_data = fits.open(gpars['data_input_path'] + self.input_file)[0]
         fits_data.verify('fix')
         
@@ -74,6 +70,8 @@ class SpecDataCHIRON(SpecData):
         
         # Calculate barycenter velocities
         if gpars['bary_corr_file'] is None and gpars['bary_corrs'] is None:
+            from barycorrpy import get_BC_vel # BC velocity correction
+            from barycorrpy.utc_tdb import JDUTC_to_BJDTDB
             self.bary_corr = get_BC_vel(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
             self.BJD = JDUTC_to_BJDTDB(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
         else:
@@ -112,6 +110,8 @@ class SpecDataiSHELL(SpecData):
         
         # Calculate barycenter velocities
         if gpars['bary_corr_file'] is None and gpars['bary_corrs'] is None:
+            from barycorrpy import get_BC_vel # BC velocity correction
+            from barycorrpy.utc_tdb import JDUTC_to_BJDTDB
             self.bary_corr = get_BC_vel(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
             self.BJD = JDUTC_to_BJDTDB(JDUTC=self.JD, starname=gpars['star_name'].replace('_', ' '), obsname=gpars['observatory'])[0][0]
         else:

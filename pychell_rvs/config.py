@@ -43,8 +43,15 @@ default_config = {
     'verbose_plot': True,
     'verbose_print': False,
     
-    # Bary center info
+    # No bary corr file
     'bary_corr_file': None,
+    
+    # If the user only wishes to compute the BJDS and barycorrs for later.
+    'compute_bc_only': False,
+    
+    # Super simps: Normally the nelder mead optimizes the whole space followed by all consecutive pairs.
+    # If true, instead of pairs, individual models are optimized alone.
+    "super_simps": False,
     
     # The number of pixels to crop on each side of the spectrum
     'crop_pix': [50, 50],
